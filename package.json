@@ -2,7 +2,7 @@
   "name": "siteforge",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n dashboard,site -c cyan,green \"pnpm dev:dashboard\" \"pnpm dev:site\"",
+    "dev": "concurrently -n dashboard,sites -c cyan,green \"pnpm dev:dashboard\" \"node scripts/dev-sites.js\"",
     "dev:dashboard": "pnpm --filter @siteforge/dashboard dev",
     "dev:site": "pnpm --filter @siteforge/site dev",
     "build": "turbo build",
@@ -10,7 +10,9 @@
     "type-check": "turbo type-check"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.39.0",
     "concurrently": "^9.2.1",
+    "dotenv": "^17.4.2",
     "turbo": "^2.0.0",
     "typescript": "^5.0.0"
   },
