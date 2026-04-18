@@ -1,0 +1,14 @@
+{
+  "name": "@siteforge/db",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@siteforge/types": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

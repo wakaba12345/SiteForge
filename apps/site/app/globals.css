@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #1a1a2e;
+  --color-accent: #e94560;
+  --color-bg: #ffffff;
+  --color-surface: #f9fafb;
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  --font-heading: 'Noto Sans TC', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-size-base: 16px;
+  --font-weight-heading: 700;
+  --line-height: 1.6;
+  --max-width: 1200px;
+  --border-radius: 8px;
+  --spacing: 1.5rem;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
