@@ -58,13 +58,13 @@ export default function ModulesPage({ params }: { params: { siteId: string } }) 
             </div>
             <button
               onClick={() => toggle(key)}
-              className={`relative w-11 h-6 rounded-full transition-colors ${
+              className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors focus:outline-none ${
                 config[key].enabled ? 'bg-blue-600' : 'bg-slate-200'
               }`}
             >
               <span
-                className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                  config[key].enabled ? 'translate-x-5' : 'translate-x-0.5'
+                className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                  config[key].enabled ? 'translate-x-[22px]' : 'translate-x-[2px]'
                 }`}
               />
             </button>
