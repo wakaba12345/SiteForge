@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     try {
       const client = new Anthropic();
       const msg = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1024,
         system: THEME_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: `Design a website theme based on this description: "${ai_prompt}"` }],

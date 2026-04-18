@@ -50,16 +50,28 @@ export async function POST(req: NextRequest) {
   const { prompt } = await req.json();
   if (!prompt) return NextResponse.json({ error: 'prompt required' }, { status: 400 });
 
-  const client = new Anthropic();
-  const msg = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2048,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: `Design a website theme based on this description: "${prompt}"` }],
-  });
+  try {
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: `Design a website theme based on this description: "${prompt}"` }],
+    });
 
-  const text = msg.content[0].type === 'text' ? msg.content[0].text : '{}';
-  const { variants } = JSON.parse(text);
+    const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
+    const parsed = JSON.parse(text);
 
-  return NextResponse.json({ variants });
+    if (!parsed.variants || !Array.isArray(parsed.variants)) {
+      return NextResponse.json({ error: 'AI 回傳格式錯誤，請再試一次' }, { status: 500 });
+    }
+
+    return NextResponse.json({ variants: parsed.variants });
+  } catch (err) {
+    console.error('[theme/generate]', err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : '生成失敗，請再試一次' },
+      { status: 500 }
+    );
+  }
 }

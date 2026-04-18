@@ -35,14 +35,20 @@ export default function ThemePage({ params }: { params: { siteId: string } }) {
   async function generate() {
     if (!prompt) return;
     setGenerating(true);
-    const res = await fetch('/api/theme/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, siteId: params.siteId }),
-    });
-    const { variants: v } = await res.json();
-    setVariants(v);
-    setGenerating(false);
+    try {
+      const res = await fetch('/api/theme/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, siteId: params.siteId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? '生成失敗');
+      setVariants(data.variants);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '生成失敗，請再試一次');
+    } finally {
+      setGenerating(false);
+    }
   }
 
   async function applyVariant(v: ThemeConfig) {
