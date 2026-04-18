@@ -5,6 +5,7 @@ import { NewsFeed } from './modules/NewsFeed';
 import { ArticleGrid } from './modules/ArticleGrid';
 import { ContactForm } from './modules/ContactForm';
 import { Footer } from './modules/Footer';
+import { SocialLinks } from './modules/SocialLinks';
 
 interface Props {
   config: ModuleConfig;
@@ -20,6 +21,7 @@ export function ModuleRenderer({ config, siteId }: Props) {
       {config.articles.enabled && <ArticleGrid siteId={siteId} config={config.articles} />}
       {config.contact.enabled && <ContactForm siteId={siteId} config={config.contact} />}
       {config.footer.enabled && <Footer config={config.footer} />}
+      {config.social?.enabled && <SocialLinks config={config.social} />}
     </>
   );
 }

@@ -55,6 +55,14 @@ export interface FooterConfig {
   };
 }
 
+export interface SocialConfig {
+  enabled: boolean;
+  line: string;
+  facebook: string;
+  email: string;
+  position: 'left' | 'right';
+}
+
 export interface ModuleConfig {
   marquee: MarqueeConfig;
   news: NewsConfig;
@@ -62,6 +70,7 @@ export interface ModuleConfig {
   hero: HeroConfig;
   contact: ContactConfig;
   footer: FooterConfig;
+  social: SocialConfig;
 }
 
 export interface ThemeColors {

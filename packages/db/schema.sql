@@ -16,7 +16,7 @@ CREATE TABLE sites (
   status TEXT NOT NULL DEFAULT 'draft'
     CHECK (status IN ('active', 'paused', 'draft')),
 
-  module_config JSONB NOT NULL DEFAULT '{"marquee":{"enabled":false,"speed":"medium","items":[]},"news":{"enabled":false,"count":5,"layout":"list","showDate":true},"articles":{"enabled":true,"layout":"grid","perPage":12,"showExcerpt":true,"showCover":true},"hero":{"enabled":false,"type":"image","title":"","subtitle":"","ctaText":"","ctaUrl":"","overlay":true},"contact":{"enabled":false,"fields":["name","email","message"],"successMessage":"已收到您的訊息，我們會盡快回覆。"},"footer":{"enabled":true,"columns":3,"links":[],"showSocial":false,"copyright":""}}'::jsonb,
+  module_config JSONB NOT NULL DEFAULT '{"marquee":{"enabled":false,"speed":"medium","items":[]},"news":{"enabled":false,"count":5,"layout":"list","showDate":true},"articles":{"enabled":true,"layout":"grid","perPage":12,"showExcerpt":true,"showCover":true},"hero":{"enabled":false,"type":"image","title":"","subtitle":"","ctaText":"","ctaUrl":"","overlay":true},"contact":{"enabled":false,"fields":["name","email","message"],"successMessage":"已收到您的訊息，我們會盡快回覆。"},"footer":{"enabled":true,"columns":3,"links":[],"showSocial":false,"copyright":""},"social":{"enabled":false,"line":"","facebook":"","email":"","position":"right"}}'::jsonb,
 
   theme_config JSONB NOT NULL DEFAULT '{"colors":{"primary":"#1A1A2E","accent":"#E94560","background":"#FFFFFF","surface":"#F9FAFB","text":"#111827","textSecondary":"#6B7280","border":"#E5E7EB"},"typography":{"headingFont":"Noto Sans TC","bodyFont":"Inter","baseFontSize":"16px","headingWeight":"700","lineHeight":"1.6"},"layout":{"maxWidth":"1200px","borderRadius":"8px","spacing":"1.5rem","headerStyle":"fixed"},"ai_prompt":""}'::jsonb,
 

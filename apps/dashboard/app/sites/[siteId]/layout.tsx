@@ -1,17 +1,7 @@
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
-
-const NAV = [
-  { href: '', label: '概覽' },
-  { href: '/modules', label: '功能模組' },
-  { href: '/theme', label: '主題風格' },
-  { href: '/content/articles', label: '文章' },
-  { href: '/content/news', label: '最新消息' },
-  { href: '/content/marquee', label: '跑馬燈' },
-  { href: '/contacts', label: '聯絡表單' },
-  { href: '/settings', label: '設定' },
-];
+import { SiteNav } from './SiteNav';
 
 export default async function SiteLayout({
   children,
@@ -47,26 +37,7 @@ export default async function SiteLayout({
       </header>
 
       <div className="flex flex-1">
-        <nav className="w-48 shrink-0 bg-white border-r border-slate-200 py-4">
-          {NAV.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={`${base}${href}`}
-              className="block px-5 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-            >
-              {label}
-            </Link>
-          ))}
-          <div className="border-t border-slate-200 mt-4 pt-4 px-5">
-            <Link
-              href={`${base}/preview`}
-              className="block text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              預覽站台 →
-            </Link>
-          </div>
-        </nav>
-
+        <SiteNav base={base} />
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>
