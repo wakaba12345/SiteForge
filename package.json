@@ -2,12 +2,15 @@
   "name": "siteforge",
   "private": true,
   "scripts": {
+    "dev": "concurrently -n dashboard,site -c cyan,green \"pnpm dev:dashboard\" \"pnpm dev:site\"",
+    "dev:dashboard": "pnpm --filter @siteforge/dashboard dev",
+    "dev:site": "pnpm --filter @siteforge/site dev",
     "build": "turbo build",
-    "dev": "turbo dev",
     "lint": "turbo lint",
     "type-check": "turbo type-check"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "turbo": "^2.0.0",
     "typescript": "^5.0.0"
   },
