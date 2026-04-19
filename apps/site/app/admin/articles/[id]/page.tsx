@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function EditArticlePage({ params }: { params: { id: string } }) {
   if (!(await isAuthenticated())) redirect('/admin/login');
+  const aiEnabled = !!process.env.ANTHROPIC_API_KEY;
   const site = await getAdminSite();
   const { data: article } = await supabase
     .from('articles')
@@ -24,6 +25,7 @@ export default async function EditArticlePage({ params }: { params: { id: string
         <a href="/admin" className="text-sm text-gray-500 hover:text-gray-700">← 返回列表</a>
       </div>
       <ArticleForm
+        aiEnabled={aiEnabled}
         initial={{
           id: article.id,
           title: article.title,

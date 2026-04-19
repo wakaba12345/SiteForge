@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
     "@siteforge/db": "*",
     "@siteforge/types": "*",
     "@supabase/supabase-js": "^2.39.0",

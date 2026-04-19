@@ -35,13 +35,30 @@ const EMPTY: ArticleData = {
   seo_title: '', seo_description: '', sort_order: 0,
 };
 
-export default function ArticleForm({ initial }: { initial?: Partial<ArticleData> & { id?: string } }) {
+interface SpellError { wrong: string; correct: string; reason: string; }
+
+export default function ArticleForm({
+  initial,
+  aiEnabled = false,
+}: {
+  initial?: Partial<ArticleData> & { id?: string };
+  aiEnabled?: boolean;
+}) {
   const router = useRouter();
   const [form, setForm] = useState<ArticleData>({ ...EMPTY, ...initial });
   const [tagInput, setTagInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const isEdit = !!initial?.id;
+
+  // AI states
+  const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
+  const [loadingTitles, setLoadingTitles] = useState(false);
+  const [loadingSeo, setLoadingSeo] = useState(false);
+  const [spellErrors, setSpellErrors] = useState<SpellError[]>([]);
+  const [spellMessage, setSpellMessage] = useState('');
+  const [loadingSpell, setLoadingSpell] = useState(false);
+  const [showSpell, setShowSpell] = useState(false);
 
   function set<K extends keyof ArticleData>(key: K, val: ArticleData[K]) {
     setForm((f) => ({ ...f, [key]: val }));
@@ -53,6 +70,7 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
       title,
       slug: f.slug && isEdit ? f.slug : slugify(title),
     }));
+    setTitleSuggestions([]);
   }
 
   function addTag(raw: string) {
@@ -67,8 +85,66 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
     setForm((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function suggestTitles() {
+    setLoadingTitles(true);
+    setTitleSuggestions([]);
+    try {
+      const res = await fetch('/api/admin/generate-titles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, content: form.content }),
+      });
+      const data = await res.json();
+      setTitleSuggestions(data.titles ?? []);
+    } finally {
+      setLoadingTitles(false);
+    }
+  }
+
+  async function generateSeo() {
+    setLoadingSeo(true);
+    try {
+      const res = await fetch('/api/admin/generate-seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, content: form.content }),
+      });
+      const data = await res.json();
+      setForm((f) => ({
+        ...f,
+        seo_title: data.seoTitle || f.seo_title,
+        seo_description: data.seoDescription || f.seo_description,
+      }));
+    } finally {
+      setLoadingSeo(false);
+    }
+  }
+
+  async function runSpellcheck() {
+    setLoadingSpell(true);
+    setShowSpell(false);
+    try {
+      const res = await fetch('/api/admin/spellcheck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, content: form.content }),
+      });
+      const data = await res.json();
+      setSpellErrors(data.errors ?? []);
+      setSpellMessage(data.message ?? '');
+      setShowSpell(true);
+    } finally {
+      setLoadingSpell(false);
+    }
+  }
+
+  function applySpellFix(e: SpellError) {
+    setForm((f) => ({ ...f, content: f.content.replace(e.wrong, e.correct) }));
+    setSpellErrors((prev) => prev.filter((x) => x !== e));
+  }
+
+  async function handleSubmit(ev: React.FormEvent) {
+    ev.preventDefault();
     setSaving(true);
     setError('');
 
@@ -107,8 +183,22 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main column */}
         <div className="space-y-5 lg:col-span-2">
+
+          {/* Title */}
           <div>
-            <label className="mb-1 block text-sm font-medium">標題</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-sm font-medium">標題</label>
+              {aiEnabled && (
+                <button
+                  type="button"
+                  onClick={suggestTitles}
+                  disabled={loadingTitles}
+                  className="text-xs text-[#c9a84c] hover:text-[#b8943e] disabled:opacity-50 flex items-center gap-1"
+                >
+                  {loadingTitles ? '生成中…' : '✦ AI 建議標題'}
+                </button>
+              )}
+            </div>
             <input
               type="text"
               value={form.title}
@@ -116,6 +206,20 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
               required
               className="w-full rounded border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#c9a84c]/50"
             />
+            {titleSuggestions.length > 0 && (
+              <div className="mt-2 flex flex-col gap-1">
+                {titleSuggestions.map((t, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { handleTitleChange(t); setTitleSuggestions([]); }}
+                    className="text-left text-sm px-3 py-1.5 rounded border border-[#c9a84c]/40 bg-[#c9a84c]/5 hover:bg-[#c9a84c]/10 text-[#0d1f3c]"
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -139,8 +243,21 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
             />
           </div>
 
+          {/* Content */}
           <div>
-            <label className="mb-1 block text-sm font-medium">內文</label>
+            <div className="mb-1 flex items-center justify-between">
+              <label className="text-sm font-medium">內文</label>
+              {aiEnabled && (
+                <button
+                  type="button"
+                  onClick={runSpellcheck}
+                  disabled={loadingSpell}
+                  className="text-xs text-rose-500 hover:text-rose-600 disabled:opacity-50"
+                >
+                  {loadingSpell ? '校對中…' : '✦ AI 挑錯字'}
+                </button>
+              )}
+            </div>
             <textarea
               value={form.content}
               onChange={(e) => set('content', e.target.value)}
@@ -150,9 +267,48 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
             />
           </div>
 
+          {/* Spellcheck results */}
+          {showSpell && (
+            <div className="rounded border border-rose-200 bg-rose-50 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-rose-800">{spellMessage}</p>
+                <button type="button" onClick={() => setShowSpell(false)} className="text-xs text-rose-400 hover:text-rose-600">關閉</button>
+              </div>
+              {spellErrors.map((e, i) => (
+                <div key={i} className="flex items-start justify-between gap-3 rounded bg-white border border-rose-100 px-3 py-2">
+                  <div className="text-sm">
+                    <span className="line-through text-red-500">{e.wrong}</span>
+                    <span className="mx-2 text-gray-400">→</span>
+                    <span className="text-green-600 font-medium">{e.correct}</span>
+                    <span className="ml-2 text-xs text-gray-400">{e.reason}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => applySpellFix(e)}
+                    className="shrink-0 text-xs bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded"
+                  >
+                    套用
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* SEO */}
           <div className="rounded border bg-gray-50 p-4 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700">SEO 設定</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-700">SEO 設定</h3>
+              {aiEnabled && (
+                <button
+                  type="button"
+                  onClick={generateSeo}
+                  disabled={loadingSeo}
+                  className="text-xs text-[#c9a84c] hover:text-[#b8943e] disabled:opacity-50"
+                >
+                  {loadingSeo ? '生成中…' : '✦ AI 自動生成'}
+                </button>
+              )}
+            </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-600">Meta 標題</label>
               <input
@@ -176,7 +332,6 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
 
         {/* Sidebar */}
         <div className="space-y-5">
-          {/* Status */}
           <div className="rounded border bg-white p-4 shadow-sm space-y-4">
             <h3 className="text-sm font-semibold">發布設定</h3>
             <div>
@@ -218,7 +373,6 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
             </div>
           </div>
 
-          {/* Cover Image */}
           <div className="rounded border bg-white p-4 shadow-sm space-y-3">
             <h3 className="text-sm font-semibold">封面圖片</h3>
             <input
@@ -233,7 +387,6 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
             )}
           </div>
 
-          {/* Category & Tags */}
           <div className="rounded border bg-white p-4 shadow-sm space-y-4">
             <h3 className="text-sm font-semibold">分類與標籤</h3>
             <div>
@@ -268,7 +421,6 @@ export default function ArticleForm({ initial }: { initial?: Partial<ArticleData
             </div>
           </div>
 
-          {/* Sort */}
           <div className="rounded border bg-white p-4 shadow-sm">
             <label className="mb-1 block text-xs font-medium text-gray-600">排序（數字越小越前面）</label>
             <input
