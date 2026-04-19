@@ -80,13 +80,30 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
 
   const { data: site } = await supabase
     .from('sites')
-    .select('id, name, module_config, owner_id')
+    .select('id, name, module_config, owner_id, seo_config')
     .eq('id', params.siteId)
     .eq('owner_id', user.id)
     .single();
   if (!site) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const { prompt } = await req.json();
+  const body = await req.json();
+  const { mode, prompt, generated: passedGenerated } = body;
+
+  // ── MODE: apply ── save previously generated data to DB
+  if (mode === 'apply') {
+    if (!passedGenerated) return NextResponse.json({ error: 'generated data required' }, { status: 400 });
+    await applyGenerated(site, params.siteId, passedGenerated, prompt ?? '');
+    return NextResponse.json({
+      ok: true,
+      summary: {
+        articles: passedGenerated.articles?.length ?? 0,
+        news: passedGenerated.news?.length ?? 0,
+        marquee: passedGenerated.marquee?.length ?? 0,
+      },
+    });
+  }
+
+  // ── MODE: preview (default) ── call AI, return data without saving
   if (!prompt) return NextResponse.json({ error: 'prompt required' }, { status: 400 });
 
   const client = new Anthropic();
@@ -98,13 +115,11 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
   });
 
   const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
-  // Strip markdown code fences if present
   const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
   let generated: any;
   try {
     generated = JSON.parse(text);
   } catch {
-    // Try extracting first {...} block
     const match = raw.match(/\{[\s\S]*\}/);
     if (match) {
       try { generated = JSON.parse(match[0]); } catch { /* fall through */ }
@@ -115,13 +130,17 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
     }
   }
 
+  return NextResponse.json({ ok: true, preview: generated });
+}
+
+async function applyGenerated(site: any, siteId: string, generated: any, prompt: string) {
   const service = createServiceClient();
 
   // 1. Save theme
   const themeConfig = { ...generated.theme, ai_prompt: prompt };
-  await service.from('sites').update({ theme_config: themeConfig }).eq('id', params.siteId);
+  await service.from('sites').update({ theme_config: themeConfig }).eq('id', siteId);
 
-  // 2. Update module_config: enable hero, articles, news, marquee
+  // 2. Update module_config
   const moduleUpdate = {
     ...site.module_config,
     hero: {
@@ -138,74 +157,60 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
     news: { ...(site.module_config as any).news, enabled: true },
     marquee: { ...(site.module_config as any).marquee, enabled: true, items: generated.marquee ?? [] },
   };
-  await service.from('sites').update({ module_config: moduleUpdate }).eq('id', params.siteId);
+  await service.from('sites').update({ module_config: moduleUpdate }).eq('id', siteId);
 
-  // 3. Insert articles (clear existing first)
-  await service.from('articles').delete().eq('site_id', params.siteId);
+  // 3. Articles
+  await service.from('articles').delete().eq('site_id', siteId);
   if (generated.articles?.length) {
-    const articles = generated.articles.map((a: any, i: number) => ({
-      site_id: params.siteId,
-      title: a.title,
-      slug: toSlug(a.slug || a.title),
-      category: a.category ?? null,
-      excerpt: a.excerpt ?? null,
-      content: a.content ?? '',
-      status: 'published',
-      published_at: new Date().toISOString(),
-      sort_order: i,
-    }));
-    await service.from('articles').insert(articles);
+    await service.from('articles').insert(
+      generated.articles.map((a: any, i: number) => ({
+        site_id: siteId,
+        title: a.title,
+        slug: toSlug(a.slug || a.title),
+        category: a.category ?? null,
+        excerpt: a.excerpt ?? null,
+        content: a.content ?? '',
+        status: 'published',
+        published_at: new Date().toISOString(),
+        sort_order: i,
+      }))
+    );
   }
 
-  // 4. Insert news (clear existing first)
-  await service.from('news').delete().eq('site_id', params.siteId);
+  // 4. News
+  await service.from('news').delete().eq('site_id', siteId);
   if (generated.news?.length) {
-    const news = generated.news.map((n: any, i: number) => ({
-      site_id: params.siteId,
-      title: n.title,
-      content: n.content ?? null,
-      status: 'published',
-      published_at: new Date(Date.now() - i * 86400000).toISOString(),
-      sort_order: i,
-    }));
-    await service.from('news').insert(news);
+    await service.from('news').insert(
+      generated.news.map((n: any, i: number) => ({
+        site_id: siteId,
+        title: n.title,
+        content: n.content ?? null,
+        status: 'published',
+        published_at: new Date(Date.now() - i * 86400000).toISOString(),
+        sort_order: i,
+      }))
+    );
   }
 
-  // 5. Insert marquee items (clear existing first)
-  await service.from('marquee_items').delete().eq('site_id', params.siteId);
+  // 5. Marquee
+  await service.from('marquee_items').delete().eq('site_id', siteId);
   if (generated.marquee?.length) {
-    const items = generated.marquee.map((text: string, i: number) => ({
-      site_id: params.siteId,
-      text,
-      is_active: true,
-      sort_order: i,
-    }));
-    await service.from('marquee_items').insert(items);
+    await service.from('marquee_items').insert(
+      generated.marquee.map((text: string, i: number) => ({
+        site_id: siteId, text, is_active: true, sort_order: i,
+      }))
+    );
   }
 
-  // Trigger revalidation on the deployed site so changes appear immediately
+  // Trigger revalidation
   const siteUrl = (site.seo_config as any)?.vercel_url;
   if (siteUrl && process.env.REVALIDATION_SECRET) {
     try {
       await fetch(`${siteUrl}/api/revalidate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-revalidation-secret': process.env.REVALIDATION_SECRET,
-        },
+        headers: { 'Content-Type': 'application/json', 'x-revalidation-secret': process.env.REVALIDATION_SECRET },
         body: JSON.stringify({ paths: ['/', '/articles', '/news'] }),
       });
-    } catch {
-      // Non-fatal: site may not be deployed yet
-    }
+    } catch { /* non-fatal */ }
   }
-
-  return NextResponse.json({
-    ok: true,
-    summary: {
-      articles: generated.articles?.length ?? 0,
-      news: generated.news?.length ?? 0,
-      marquee: generated.marquee?.length ?? 0,
-    },
-  });
 }
