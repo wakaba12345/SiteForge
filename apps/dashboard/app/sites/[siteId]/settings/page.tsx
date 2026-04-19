@@ -110,17 +110,47 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
 
       <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4 flex flex-col gap-4">
         <h2 className="font-medium text-slate-700 text-sm">SEO</h2>
-        {(['title', 'description'] as const).map((key) => (
-          <div key={key}>
-            <label className="block text-xs text-slate-500 mb-1 capitalize">{key}</label>
-            <input
-              type="text"
-              value={site.seo_config[key]}
-              onChange={(e) => setSite({ ...site, seo_config: { ...site.seo_config, [key]: e.target.value } })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        ))}
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">頁面標題</label>
+          <input
+            type="text"
+            value={site.seo_config.title}
+            onChange={(e) => setSite({ ...site, seo_config: { ...site.seo_config, title: e.target.value } })}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">網站描述</label>
+          <textarea
+            value={site.seo_config.description}
+            onChange={(e) => setSite({ ...site, seo_config: { ...site.seo_config, description: e.target.value } })}
+            rows={2}
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">Favicon 網址</label>
+          <input
+            type="url"
+            value={site.seo_config.favicon ?? ''}
+            onChange={(e) => setSite({ ...site, seo_config: { ...site.seo_config, favicon: e.target.value } })}
+            placeholder="https://example.com/favicon.ico"
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {site.seo_config.favicon && (
+            <img src={site.seo_config.favicon} alt="favicon preview" className="mt-2 w-8 h-8 object-contain rounded" />
+          )}
+        </div>
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">OG Image 網址（社群分享預覽圖）</label>
+          <input
+            type="url"
+            value={site.seo_config.ogImage ?? ''}
+            onChange={(e) => setSite({ ...site, seo_config: { ...site.seo_config, ogImage: e.target.value } })}
+            placeholder="https://example.com/og.jpg"
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
         <div>
           <label className="block text-xs text-slate-500 mb-1">語言</label>
           <select
