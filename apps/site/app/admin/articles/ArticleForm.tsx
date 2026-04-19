@@ -36,6 +36,8 @@ const EMPTY: ArticleData = {
 };
 
 interface SpellError { wrong: string; correct: string; reason: string; }
+interface Angle { title: string; description: string; hook: string; }
+interface Opening { style: string; text: string; }
 
 export default function ArticleForm({
   initial,
@@ -59,6 +61,14 @@ export default function ArticleForm({
   const [spellMessage, setSpellMessage] = useState('');
   const [loadingSpell, setLoadingSpell] = useState(false);
   const [showSpell, setShowSpell] = useState(false);
+
+  const [angles, setAngles] = useState<Angle[]>([]);
+  const [loadingAngles, setLoadingAngles] = useState(false);
+  const [showAngles, setShowAngles] = useState(false);
+
+  const [openings, setOpenings] = useState<Opening[]>([]);
+  const [loadingOpenings, setLoadingOpenings] = useState(false);
+  const [showOpenings, setShowOpenings] = useState(false);
 
   function set<K extends keyof ArticleData>(key: K, val: ArticleData[K]) {
     setForm((f) => ({ ...f, [key]: val }));
@@ -141,6 +151,45 @@ export default function ArticleForm({
   function applySpellFix(e: SpellError) {
     setForm((f) => ({ ...f, content: f.content.replace(e.wrong, e.correct) }));
     setSpellErrors((prev) => prev.filter((x) => x !== e));
+  }
+
+  async function analyzeAngles() {
+    setLoadingAngles(true);
+    setShowAngles(false);
+    try {
+      const res = await fetch('/api/admin/analyze-angles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, content: form.content }),
+      });
+      const data = await res.json();
+      setAngles(data.angles ?? []);
+      setShowAngles(true);
+    } finally {
+      setLoadingAngles(false);
+    }
+  }
+
+  async function generateOpenings() {
+    setLoadingOpenings(true);
+    setShowOpenings(false);
+    try {
+      const res = await fetch('/api/admin/opening-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: form.title, content: form.content }),
+      });
+      const data = await res.json();
+      setOpenings(data.suggestions ?? []);
+      setShowOpenings(true);
+    } finally {
+      setLoadingOpenings(false);
+    }
+  }
+
+  function applyOpening(text: string) {
+    setForm((f) => ({ ...f, content: text + '\n\n' + f.content }));
+    setShowOpenings(false);
   }
 
   async function handleSubmit(ev: React.FormEvent) {
@@ -288,6 +337,68 @@ export default function ArticleForm({
                     className="shrink-0 text-xs bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded"
                   >
                     套用
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Angles + Opening buttons row */}
+          {aiEnabled && (
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={analyzeAngles}
+                disabled={loadingAngles}
+                className="flex-1 rounded-lg border border-purple-200 bg-purple-50 px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50"
+              >
+                {loadingAngles ? '分析中…' : '✦ AI 切角分析'}
+              </button>
+              <button
+                type="button"
+                onClick={generateOpenings}
+                disabled={loadingOpenings}
+                className="flex-1 rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-sm font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-50"
+              >
+                {loadingOpenings ? '生成中…' : '✦ AI 第一段建議'}
+              </button>
+            </div>
+          )}
+
+          {/* Angles results */}
+          {showAngles && angles.length > 0 && (
+            <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-purple-800">切角分析（{angles.length} 個角度）</p>
+                <button type="button" onClick={() => setShowAngles(false)} className="text-xs text-purple-400 hover:text-purple-600">關閉</button>
+              </div>
+              {angles.map((a, i) => (
+                <div key={i} className="rounded bg-white border border-purple-100 p-3 space-y-1">
+                  <p className="text-sm font-semibold text-purple-900">{a.title}</p>
+                  <p className="text-xs text-gray-600">{a.description}</p>
+                  <p className="text-xs text-purple-600 italic">「{a.hook}」</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Opening suggestions */}
+          {showOpenings && openings.length > 0 && (
+            <div className="rounded-lg border border-teal-200 bg-teal-50 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-teal-800">第一段建議（點「套用」加入文章開頭）</p>
+                <button type="button" onClick={() => setShowOpenings(false)} className="text-xs text-teal-400 hover:text-teal-600">關閉</button>
+              </div>
+              {openings.map((o, i) => (
+                <div key={i} className="rounded bg-white border border-teal-100 p-3 space-y-2">
+                  <p className="text-xs font-semibold text-teal-700">{o.style}</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{o.text}</p>
+                  <button
+                    type="button"
+                    onClick={() => applyOpening(o.text)}
+                    className="text-xs bg-teal-100 hover:bg-teal-200 text-teal-700 px-3 py-1 rounded"
+                  >
+                    套用到文章開頭
                   </button>
                 </div>
               ))}
