@@ -20,8 +20,8 @@ export default function PreviewPage({ params }: { params: { siteId: string } }) 
       .then((site) => {
         if (site?.domain) {
           setPreviewUrl(`https://${site.domain}`);
-        } else if (site?.slug) {
-          setPreviewUrl(`https://${site.slug}.vercel.app`);
+        } else if ((site?.seo_config as any)?.vercel_url) {
+          setPreviewUrl((site.seo_config as any).vercel_url);
         }
       });
   }, [params.siteId]);
