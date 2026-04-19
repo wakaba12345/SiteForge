@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, createServiceClient } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用戶描述，生成一個完整的繁體中文網站內容，輸出純 JSON，不要有任何 markdown 或說明文字。
+const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用戶描述，生成一個完整的繁體中文網站內容。
+
+重要：只輸出 JSON 物件，第一個字元必須是 {，最後一個字元必須是 }，不要有任何 markdown、程式碼區塊、說明文字或前言。
 
 輸出格式如下：
 {
@@ -95,12 +97,22 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
     messages: [{ role: 'user', content: `網站名稱：${site.name}\n\n描述：${prompt}` }],
   });
 
-  const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
+  const raw = msg.content[0].type === 'text' ? msg.content[0].text : '';
+  // Strip markdown code fences if present
+  const text = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
   let generated: any;
   try {
     generated = JSON.parse(text);
   } catch {
-    return NextResponse.json({ error: 'AI 回傳格式錯誤，請再試一次' }, { status: 500 });
+    // Try extracting first {...} block
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (match) {
+      try { generated = JSON.parse(match[0]); } catch { /* fall through */ }
+    }
+    if (!generated) {
+      console.error('[generate-all] parse failed, raw:', raw.slice(0, 500));
+      return NextResponse.json({ error: 'AI 回傳格式錯誤，請再試一次' }, { status: 500 });
+    }
   }
 
   const service = createServiceClient();
