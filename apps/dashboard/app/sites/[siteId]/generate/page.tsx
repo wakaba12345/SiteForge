@@ -24,6 +24,7 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
 
   async function handleBuild() {
     if (!buildPrompt.trim() || building) return;
+    if (!window.confirm('⚠️ 執行後會覆蓋現有所有文章、消息、跑馬燈和配色，無法復原。確定要繼續嗎？')) return;
     setBuilding(true);
     setBuildResult(null);
     setBuildError('');
