@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
@@ -32,6 +32,15 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [buildResult, setBuildResult] = useState<{ articles: number; news: number; marquee: number } | null>(null);
   const [buildError, setBuildError] = useState('');
+  const [siteUrl, setSiteUrl] = useState('');
+  const [iframeKey, setIframeKey] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/sites/${params.siteId}`)
+      .then(r => r.json())
+      .then(site => { const url = site?.seo_config?.vercel_url; if (url) setSiteUrl(url); })
+      .catch(() => {});
+  }, [params.siteId]);
 
   async function handlePreview() {
     if (!buildPrompt.trim() || building) return;
@@ -69,6 +78,7 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
       if (!res.ok) throw new Error(data.error ?? '套用失敗');
       setBuildResult(data.summary);
       setPreview(null);
+      setTimeout(() => setIframeKey(k => k + 1), 2500);
     } catch (e) {
       setBuildError(e instanceof Error ? e.message : '套用失敗，請再試一次');
     } finally {
@@ -291,23 +301,78 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
 
           {/* Success */}
           {buildResult && (
-            <div className="rounded-2xl bg-green-50 border border-green-200 p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-green-600 text-lg">✓</span>
-                <h3 className="font-semibold text-green-900">套用完成！已更新至網站</h3>
-              </div>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[
-                  { label: '文章', value: buildResult.articles },
-                  { label: '最新消息', value: buildResult.news },
-                  { label: '跑馬燈', value: buildResult.marquee },
-                ].map((s) => (
-                  <div key={s.label} className="rounded-xl bg-white border border-green-100 py-3">
-                    <div className="text-2xl font-bold text-green-700">{s.value}</div>
-                    <div className="text-xs text-green-600">{s.label}</div>
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-green-50 border border-green-200 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600 text-lg">✓</span>
+                    <h3 className="font-semibold text-green-900">套用完成！</h3>
                   </div>
-                ))}
+                  <button
+                    onClick={() => { setBuildResult(null); setBuildPrompt(''); }}
+                    className="text-xs text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg px-3 py-1.5 bg-white"
+                  >
+                    重新生成
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  {[
+                    { label: '文章', value: buildResult.articles },
+                    { label: '最新消息', value: buildResult.news },
+                    { label: '跑馬燈', value: buildResult.marquee },
+                  ].map((s) => (
+                    <div key={s.label} className="rounded-xl bg-white border border-green-100 py-3">
+                      <div className="text-2xl font-bold text-green-700">{s.value}</div>
+                      <div className="text-xs text-green-600">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
               </div>
+
+              {siteUrl && (
+                <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1.5">
+                        <span className="w-3 h-3 rounded-full bg-red-400" />
+                        <span className="w-3 h-3 rounded-full bg-yellow-400" />
+                        <span className="w-3 h-3 rounded-full bg-green-400" />
+                      </div>
+                      <span className="text-xs text-slate-400 ml-1 font-mono truncate max-w-[240px]">{siteUrl}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setIframeKey(k => k + 1)}
+                        className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+                        title="重新整理"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        重新整理
+                      </button>
+                      <a
+                        href={siteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        開新分頁
+                      </a>
+                    </div>
+                  </div>
+                  <iframe
+                    key={iframeKey}
+                    src={siteUrl}
+                    className="w-full"
+                    style={{ height: 560, border: 'none' }}
+                    title="網站預覽"
+                  />
+                </div>
+              )}
             </div>
           )}
 
