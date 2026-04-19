@@ -16,7 +16,9 @@ export default async function ArticlePage({ params }: Props) {
 
   if (!article) notFound();
 
-  const { content } = await renderMdx(article.content);
+  const isHtml = article.content.trimStart().startsWith('<');
+  const mdxResult = isHtml ? null : await renderMdx(article.content);
+  const content = mdxResult?.content ?? null;
 
   return (
     <main className="min-h-screen py-12 px-6">
@@ -38,7 +40,9 @@ export default async function ArticlePage({ params }: Props) {
           className="prose prose-lg max-w-none"
           style={{ color: 'var(--color-text)', lineHeight: 'var(--line-height)' }}
         >
-          {content}
+          {isHtml
+            ? <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            : content}
         </div>
       </article>
     </main>
