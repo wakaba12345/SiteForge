@@ -26,38 +26,42 @@ export default function ModulesPage({ params }: { params: { siteId: string } }) 
   useEffect(() => {
     fetch(`/api/modules?siteId=${params.siteId}`)
       .then((r) => r.json())
-      .then((data: ModuleConfig) => {
+      .then((raw: ModuleConfig) => {
+        // Ensure social key always exists with defaults
+        const data: ModuleConfig = {
+          ...raw,
+          social: raw.social ?? { enabled: false, line: '', facebook: '', email: '', position: 'right' },
+        };
         setConfig(data);
-        if (data.social) {
-          setSocialDraft({
-            line: data.social.line,
-            facebook: data.social.facebook,
-            email: data.social.email,
-            position: data.social.position,
-          });
-        }
+        setSocialDraft({
+          line: data.social.line,
+          facebook: data.social.facebook,
+          email: data.social.email,
+          position: data.social.position,
+        });
       });
   }, [params.siteId]);
 
   async function toggle(key: keyof ModuleConfig) {
     if (!config) return;
+    const current = config[key] ?? { enabled: false };
     const next = {
       ...config,
-      [key]: { ...config[key], enabled: !config[key].enabled },
+      [key]: { ...current, enabled: !current.enabled },
     };
     setConfig(next);
     setSaving(true);
     await fetch(`/api/modules?siteId=${params.siteId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [key]: { enabled: !config[key].enabled } }),
+      body: JSON.stringify({ [key]: { enabled: !current.enabled } }),
     });
     setSaving(false);
   }
 
   async function saveSocial() {
     if (!config) return;
-    const next = { ...config, social: { ...config.social, ...socialDraft } };
+    const next = { ...config, social: { ...(config.social ?? {}), ...socialDraft } };
     setConfig(next);
     setSaving(true);
     await fetch(`/api/modules?siteId=${params.siteId}`, {
@@ -87,18 +91,18 @@ export default function ModulesPage({ params }: { params: { siteId: string } }) 
               <button
                 onClick={() => toggle(key)}
                 className={`relative inline-flex items-center w-11 h-6 rounded-full transition-colors focus:outline-none ${
-                  config[key].enabled ? 'bg-blue-600' : 'bg-slate-200'
+                  config[key]?.enabled ? 'bg-blue-600' : 'bg-slate-200'
                 }`}
               >
                 <span
                   className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                    config[key].enabled ? 'translate-x-[22px]' : 'translate-x-[2px]'
+                    config[key]?.enabled ? 'translate-x-[22px]' : 'translate-x-[2px]'
                   }`}
                 />
               </button>
             </div>
 
-            {key === 'social' && config.social.enabled && (
+            {key === 'social' && config.social?.enabled && (
               <div className="border-t border-slate-100 px-5 py-4 flex flex-col gap-3 bg-slate-50">
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">LINE ID 或完整網址</label>
