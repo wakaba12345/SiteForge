@@ -33,6 +33,25 @@ The JSON must follow this exact structure:
   }
 }`;
 
+async function generateThemeInBackground(serviceClient: any, siteId: string, ai_prompt: string) {
+  try {
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: THEME_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: `Design a website theme based on this description: "${ai_prompt}"` }],
+    });
+    const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
+    const themeConfig = JSON.parse(text);
+    await serviceClient.from('sites').update({
+      theme_config: { ...themeConfig, ai_prompt },
+    }).eq('id', siteId);
+  } catch {
+    // silently fail — user can regenerate from theme page
+  }
+}
+
 export async function GET() {
   const supabase = createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -52,24 +71,13 @@ export async function POST(req: NextRequest) {
   const serviceClient = createServiceClient();
   const site = await createSite(serviceClient, { name, slug, owner_id: user.id });
 
+  // Save ai_prompt and kick off theme generation in background (non-blocking)
   if (ai_prompt) {
-    try {
-      const client = new Anthropic();
-      const msg = await client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        system: THEME_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: `Design a website theme based on this description: "${ai_prompt}"` }],
-      });
-      const text = msg.content[0].type === 'text' ? msg.content[0].text : '';
-      const themeConfig = JSON.parse(text);
-      await serviceClient.from('sites').update({
-        theme_config: { ...themeConfig, ai_prompt },
-      }).eq('id', site.id);
-      site.theme_config = { ...themeConfig, ai_prompt };
-    } catch {
-      // AI generation failed; site is still created with defaults
-    }
+    await serviceClient.from('sites')
+      .update({ theme_config: { ...site.theme_config, ai_prompt } })
+      .eq('id', site.id);
+
+    generateThemeInBackground(serviceClient, site.id, ai_prompt);
   }
 
   return NextResponse.json(site, { status: 201 });
