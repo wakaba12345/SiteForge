@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@siteforge/types', '@siteforge/db'],
+  serverExternalPackages: ['@anthropic-ai/sdk'],
   images: {
     remotePatterns: [
       {
