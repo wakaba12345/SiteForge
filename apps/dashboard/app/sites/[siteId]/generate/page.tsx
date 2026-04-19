@@ -14,6 +14,7 @@ const STARTER_PROMPTS = [
 type Tab = 'quickbuild' | 'chat';
 
 interface PreviewData {
+  layout?: { heroLayout?: string; articlesLayout?: string; newsLayout?: string };
   theme: any;
   hero: any;
   articles: Array<{ title: string; category?: string }>;
@@ -190,6 +191,24 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
                   <p className="text-xs text-slate-400 mt-1">
                     字型：{preview.theme.typography?.headingFont} / {preview.theme.typography?.bodyFont}
                   </p>
+                </div>
+              )}
+
+              {/* Layout */}
+              {preview.layout && (
+                <div>
+                  <p className="text-xs font-medium text-slate-500 mb-2">版型</p>
+                  <div className="flex gap-2 flex-wrap text-xs">
+                    {[
+                      { label: 'Hero', value: preview.layout.heroLayout },
+                      { label: '文章', value: preview.layout.articlesLayout },
+                      { label: '消息', value: preview.layout.newsLayout },
+                    ].map((item) => item.value && (
+                      <span key={item.label} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                        {item.label}：{item.value}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 

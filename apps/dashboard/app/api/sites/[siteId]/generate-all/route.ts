@@ -8,6 +8,11 @@ const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用
 
 輸出格式如下：
 {
+  "layout": {
+    "heroLayout": "<centered|split|minimal>",
+    "articlesLayout": "<grid|list|magazine>",
+    "newsLayout": "<list|card>"
+  },
   "theme": {
     "colors": {
       "primary": "<hex>",
@@ -56,7 +61,20 @@ const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用
   "marquee": ["<跑馬燈文字1>", "<跑馬燈文字2>", "<跑馬燈文字3>", "<跑馬燈文字4>", "<跑馬燈文字5>"]
 }
 
-規則：
+版型選擇規則（依業種判斷）：
+- heroLayout:
+  - "split"：適合專業服務（律師、會計、顧問、醫療、金融）→ 左文右色塊，商務感強
+  - "minimal"：適合設計、科技、個人品牌、攝影 → 簡潔大字、大量留白
+  - "centered"：適合餐飲、零售、一般商家 → 漸層底色，視覺衝擊強
+- articlesLayout:
+  - "magazine"：適合需要突出「關於我們」的業種（律師、診所、顧問）→ 第一篇大圖特顯
+  - "grid"：適合產品、服務項目多的業種
+  - "list"：適合部落格、新聞、內容較多的業種
+- newsLayout:
+  - "card"：消息量多、視覺豐富的業種
+  - "list"：簡潔專業的業種
+
+其他規則：
 - articles 生成 4-6 篇，包含「關於我們」「服務項目」「為什麼選擇我們」等，視業種調整
 - news 生成 4 則最新消息
 - marquee 生成 5 則滾動文字
@@ -141,20 +159,30 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
   await service.from('sites').update({ theme_config: themeConfig }).eq('id', siteId);
 
   // 2. Update module_config
+  const layoutConfig = generated.layout ?? {};
   const moduleUpdate = {
     ...site.module_config,
     hero: {
       ...(site.module_config as any).hero,
       enabled: true,
       type: 'gradient',
+      layout: layoutConfig.heroLayout ?? 'centered',
       title: generated.hero?.title ?? '',
       subtitle: generated.hero?.subtitle ?? '',
       ctaText: generated.hero?.ctaText ?? '',
       ctaUrl: generated.hero?.ctaUrl ?? '/contact',
       overlay: false,
     },
-    articles: { ...(site.module_config as any).articles, enabled: true },
-    news: { ...(site.module_config as any).news, enabled: true },
+    articles: {
+      ...(site.module_config as any).articles,
+      enabled: true,
+      layout: layoutConfig.articlesLayout ?? 'grid',
+    },
+    news: {
+      ...(site.module_config as any).news,
+      enabled: true,
+      layout: layoutConfig.newsLayout ?? 'list',
+    },
     marquee: { ...(site.module_config as any).marquee, enabled: true, items: generated.marquee ?? [] },
   };
   await service.from('sites').update({ module_config: moduleUpdate }).eq('id', siteId);

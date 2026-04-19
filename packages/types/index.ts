@@ -23,6 +23,7 @@ export interface ArticlesConfig {
 export interface HeroConfig {
   enabled: boolean;
   type: 'image' | 'video' | 'gradient';
+  layout?: 'centered' | 'split' | 'minimal';
   title: string;
   subtitle: string;
   ctaText: string;
