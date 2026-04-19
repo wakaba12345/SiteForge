@@ -9,7 +9,7 @@ export async function getSiteConfig(): Promise<Site> {
     .from('sites')
     .select('*')
     .eq('domain', host)
-    .eq('status', 'active')
+    .neq('status', 'paused')
     .single();
 
   if (!site) {
@@ -20,7 +20,7 @@ export async function getSiteConfig(): Promise<Site> {
       .from('sites')
       .select('*')
       .eq('slug', slug)
-      .eq('status', 'active')
+      .neq('status', 'paused')
       .single();
 
     site = data;
