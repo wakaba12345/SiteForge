@@ -2,11 +2,58 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, createServiceClient } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用戶描述，生成一個完整的繁體中文網站內容。
+const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣各行業的品牌美學。根據業種與描述，生成精緻、專業的繁體中文網站內容與設計配置。
 
-重要：只輸出 JSON 物件，第一個字元必須是 {，最後一個字元必須是 }，不要有任何 markdown、程式碼區塊、說明文字或前言。
+設計哲學（非常重要）：
+- 背景以白色 (#ffffff) 或極淺灰 (#f8fafc / #f4f6f8) 為主，絕不用鮮豔顏色當背景
+- primary 顏色用於標題、按鈕、強調線，不做大面積背景
+- 字型只用兩種：heading 字型 + body 固定用 Noto Sans TC
+- 大量留白：section padding 充裕、行距 1.7、卡片 padding 充足
+- 卡片用極淺陰影 + 細邊框，hover 時加深陰影
+- 顏色深沉克制，避免糖果色、霓虹色
 
-輸出格式如下：
+配色方案（依業種精確選擇）：
+- 律師 / 法律 / 公證：primary: #1a2f4a（深海軍藍）, accent: #b8973a（金色）, background: #ffffff, surface: #f7f8fa
+- 醫療 / 診所 / 健康：primary: #1d4e6b（深藍綠）, accent: #2a9d8f（青綠）, background: #ffffff, surface: #f0f7f9
+- 財務 / 會計 / 顧問：primary: #1e3a2f（深墨綠）, accent: #4a7c6f（中綠）, background: #ffffff, surface: #f4f7f5
+- 科技 / 軟體 / 新創：primary: #1e1b4b（深靛紫）, accent: #4f46e5（亮靛）, background: #ffffff, surface: #f8f7ff
+- 設計 / 創意 / 攝影：primary: #111111（近黑）, accent: #e63946（紅）, background: #ffffff, surface: #f9f9f9
+- 餐飲 / 咖啡 / 食品：primary: #3d1f0d（深咖啡）, accent: #c9722a（橙棕）, background: #fefcf8, surface: #f5f0e8
+- 不動產 / 建築：primary: #2c3e50（深藍灰）, accent: #c0922a（金）, background: #ffffff, surface: #f5f6f7
+- 教育 / 補習班：primary: #1a3a5c（深藍）, accent: #e67e22（橙）, background: #ffffff, surface: #faf7f2
+- 零售 / 電商：primary: #212121（近黑）, accent: #e91e63（粉紅）, background: #ffffff, surface: #fafafa
+- 其他一般服務：primary: #1f2d3d（深藍灰）, accent: #3498db（藍）, background: #ffffff, surface: #f4f7fb
+
+字型配對規則（選最符合業種的一組）：
+- 律師 / 醫療 / 財務 / 顧問：headingFont: "Manrope", bodyFont: "Noto Sans TC"
+- 科技 / 新創 / SaaS：headingFont: "Plus Jakarta Sans", bodyFont: "Noto Sans TC"
+- 設計 / 創意 / 個人品牌：headingFont: "Space Grotesk", bodyFont: "Noto Sans TC"
+- 餐飲 / 文化 / 傳統：headingFont: "Noto Serif TC", bodyFont: "Noto Sans TC"
+- 教育 / 補習 / 一般：headingFont: "Inter", bodyFont: "Noto Sans TC"
+
+版型選擇規則：
+- heroLayout:
+  - "minimal"：律師、醫療、顧問、財務、設計、科技、個人品牌 → 留白大字，高端感
+  - "split"：不動產、建築、企業服務 → 左文右色塊，商務感
+  - "centered"：餐飲、零售、活動、一般消費品 → 漸層底色，親和力
+- articlesLayout:
+  - "magazine"：律師、診所、顧問、不動產（需突出第一篇「關於我們」）
+  - "grid"：科技、零售、教育、服務項目多的業種
+  - "list"：部落格、新聞、閱讀導向
+- newsLayout:
+  - "card"：零售、餐飲、消息量多
+  - "list"：律師、醫療、顧問等專業服務
+
+內容規則：
+- articles 生成 4-6 篇，第一篇必須是「關於我們」，其後依業種加入服務項目、常見問題、成功案例等
+- news 生成 4 則，格式如真實公告（含日期感）
+- marquee 生成 5 則，用於強調優勢或服務特色
+- hero title 10 字以內，有力、直接
+- hero subtitle 25 字左右，說明核心價值
+- 所有文字繁體中文，貼近台灣用語
+
+重要：只輸出 JSON 物件，第一個字元是 {，最後一個字元是 }，不要有任何其他輸出。
+
 {
   "layout": {
     "heroLayout": "<centered|split|minimal>",
@@ -15,32 +62,32 @@ const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用
   },
   "theme": {
     "colors": {
-      "primary": "<hex>",
-      "accent": "<hex>",
-      "background": "<hex>",
-      "surface": "<hex>",
-      "text": "<hex>",
-      "textSecondary": "<hex>",
-      "border": "<hex>"
+      "primary": "<深沉主色>",
+      "accent": "<點綴色>",
+      "background": "#ffffff 或極淺色",
+      "surface": "<比 background 稍深，用於卡片底色>",
+      "text": "#1a1a1a",
+      "textSecondary": "#64748b",
+      "border": "#e2e8f0"
     },
     "typography": {
-      "headingFont": "<Google Font>",
-      "bodyFont": "<Google Font>",
+      "headingFont": "<依業種選擇>",
+      "bodyFont": "Noto Sans TC",
       "baseFontSize": "16px",
       "headingWeight": "700",
-      "lineHeight": "1.6"
+      "lineHeight": "1.7"
     },
     "layout": {
       "maxWidth": "1200px",
-      "borderRadius": "<0px|8px|16px>",
+      "borderRadius": "<0px|6px|12px>",
       "spacing": "1.5rem",
       "headerStyle": "fixed"
     }
   },
   "hero": {
-    "title": "<主標題，10字以內>",
-    "subtitle": "<副標題，20-30字>",
-    "ctaText": "<按鈕文字，5字以內>",
+    "title": "<10 字以內，有力>",
+    "subtitle": "<25 字左右，核心價值>",
+    "ctaText": "<5 字以內>",
     "ctaUrl": "/contact"
   },
   "articles": [
@@ -48,39 +95,15 @@ const SYSTEM_PROMPT = `你是一個專業的網站內容生成助理。根據用
       "title": "<文章標題>",
       "slug": "<英文slug>",
       "category": "<分類>",
-      "excerpt": "<100字以內摘要>",
-      "content": "<完整HTML內文，至少300字，用<h2><p><ul>等標籤>"
+      "excerpt": "<100字以內>",
+      "content": "<完整HTML，至少300字>"
     }
   ],
   "news": [
-    {
-      "title": "<消息標題>",
-      "content": "<50-100字內文>"
-    }
+    { "title": "<消息標題>", "content": "<50-100字>" }
   ],
-  "marquee": ["<跑馬燈文字1>", "<跑馬燈文字2>", "<跑馬燈文字3>", "<跑馬燈文字4>", "<跑馬燈文字5>"]
-}
-
-版型選擇規則（依業種判斷）：
-- heroLayout:
-  - "split"：適合專業服務（律師、會計、顧問、醫療、金融）→ 左文右色塊，商務感強
-  - "minimal"：適合設計、科技、個人品牌、攝影 → 簡潔大字、大量留白
-  - "centered"：適合餐飲、零售、一般商家 → 漸層底色，視覺衝擊強
-- articlesLayout:
-  - "magazine"：適合需要突出「關於我們」的業種（律師、診所、顧問）→ 第一篇大圖特顯
-  - "grid"：適合產品、服務項目多的業種
-  - "list"：適合部落格、新聞、內容較多的業種
-- newsLayout:
-  - "card"：消息量多、視覺豐富的業種
-  - "list"：簡潔專業的業種
-
-其他規則：
-- articles 生成 4-6 篇，包含「關於我們」「服務項目」「為什麼選擇我們」等，視業種調整
-- news 生成 4 則最新消息
-- marquee 生成 5 則滾動文字
-- 顏色符合 WCAG AA 對比度
-- 可用字型：Inter, Noto Sans TC, Plus Jakarta Sans, DM Sans, Outfit, Manrope, Space Grotesk, Noto Serif TC, Playfair Display, Lora
-- 所有文字使用繁體中文，貼近台灣用語習慣`;
+  "marquee": ["<文字1>", "<文字2>", "<文字3>", "<文字4>", "<文字5>"]
+}`;
 
 function toSlug(str: string) {
   return str

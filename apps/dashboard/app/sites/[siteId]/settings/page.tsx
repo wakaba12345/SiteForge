@@ -12,6 +12,7 @@ interface DeployResult {
 export default function SettingsPage({ params }: { params: { siteId: string } }) {
   const [site, setSite] = useState<Site | null>(null);
   const [saving, setSaving] = useState(false);
+  const [heroImageUrl, setHeroImageUrl] = useState('');
 
   const [deploying, setDeploying] = useState(false);
   const [deployResult, setDeployResult] = useState<DeployResult | null>(null);
@@ -20,6 +21,7 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`).then((r) => r.json()).then((s) => {
       setSite(s);
+      setHeroImageUrl((s?.module_config as any)?.hero?.backgroundUrl ?? '');
       const seo = s?.seo_config as any;
       if (seo?.vercel_url) {
         setDeployResult({ url: seo.vercel_url, adminPassword: seo.admin_password ?? '', projectId: seo.vercel_project_id ?? '' });
@@ -38,6 +40,13 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
         domain: site.domain,
         status: site.status,
         seo_config: site.seo_config,
+        module_config: {
+          ...(site.module_config as any),
+          hero: {
+            ...(site.module_config as any)?.hero,
+            backgroundUrl: heroImageUrl || undefined,
+          }
+        },
       }),
     });
     setSaving(false);
@@ -163,6 +172,28 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
             <option value="ja">日文</option>
             <option value="en">English</option>
           </select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4 flex flex-col gap-4">
+        <div>
+          <h2 className="font-medium text-slate-700 text-sm">Hero 主視覺</h2>
+          <p className="text-xs text-slate-400 mt-0.5">設定 Hero 區塊的背景圖片，建議尺寸 1920×1080。</p>
+        </div>
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">背景圖片網址</label>
+          <input
+            type="url"
+            value={heroImageUrl}
+            onChange={(e) => setHeroImageUrl(e.target.value)}
+            placeholder="https://example.com/hero.jpg"
+            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {heroImageUrl && (
+            <div className="mt-2 rounded-lg overflow-hidden border border-slate-200 aspect-video relative">
+              <img src={heroImageUrl} alt="Hero 預覽" className="w-full h-full object-cover" />
+            </div>
+          )}
         </div>
       </div>
 

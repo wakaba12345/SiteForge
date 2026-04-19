@@ -2,39 +2,70 @@ import type { HeroConfig } from '@siteforge/types';
 
 interface Props { config: HeroConfig; }
 
-const CtaButton = ({ href, text }: { href: string; text: string }) => (
+const CtaButton = ({ href, text, outline }: { href: string; text: string; outline?: boolean }) => (
   <a
     href={href}
-    className="inline-block px-8 py-3 font-semibold transition-opacity hover:opacity-90"
-    style={{ background: 'var(--color-accent)', color: '#fff', borderRadius: 'var(--border-radius)' }}
+    className="inline-block px-8 py-3 font-semibold transition-all hover:opacity-90 hover:-translate-y-0.5"
+    style={outline
+      ? { border: '2px solid var(--color-primary)', color: 'var(--color-primary)', borderRadius: 'var(--border-radius)', background: 'transparent' }
+      : { background: 'var(--color-primary)', color: '#fff', borderRadius: 'var(--border-radius)' }
+    }
   >
     {text}
   </a>
 );
 
 function HeroCentered({ config }: Props) {
-  const hasBackground = config.type !== 'gradient' && config.backgroundUrl;
+  const hasImage = !!config.backgroundUrl;
+
+  if (hasImage) {
+    return (
+      <section
+        className="relative flex items-center justify-center min-h-[520px] px-6 py-24 text-center"
+        style={{ backgroundImage: `url(${config.backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      >
+        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.52)' }} />
+        <div className="relative z-10 max-w-2xl mx-auto">
+          {config.title && (
+            <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight"
+              style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--font-weight-heading)', color: '#fff' }}>
+              {config.title}
+            </h1>
+          )}
+          {config.subtitle && (
+            <p className="text-lg md:text-xl mb-8" style={{ color: 'rgba(255,255,255,0.88)' }}>{config.subtitle}</p>
+          )}
+          {config.ctaText && config.ctaUrl && (
+            <a href={config.ctaUrl} className="inline-block px-8 py-3 font-semibold transition-all hover:opacity-90"
+              style={{ background: 'var(--color-accent)', color: '#fff', borderRadius: 'var(--border-radius)' }}>
+              {config.ctaText}
+            </a>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  // No image: clean white/surface hero with gradient accent line
   return (
     <section
-      className="relative flex items-center justify-center min-h-[480px] px-6 py-20 text-center"
-      style={
-        hasBackground
-          ? { backgroundImage: `url(${config.backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-          : { background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))' }
-      }
+      className="flex items-center justify-center min-h-[480px] px-6 py-24 text-center"
+      style={{ background: 'var(--color-bg)' }}
     >
-      {config.overlay && hasBackground && (
-        <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} />
-      )}
-      <div className="relative z-10 max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto">
+        {/* Accent line */}
+        <div className="w-12 h-1 rounded-full mx-auto mb-6"
+          style={{ background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))' }} />
         {config.title && (
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight"
-            style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--font-weight-heading)', color: '#fff' }}>
+          <h1 className="text-4xl md:text-6xl font-bold mb-5 leading-tight"
+            style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--font-weight-heading)', color: 'var(--color-text)' }}>
             {config.title}
           </h1>
         )}
         {config.subtitle && (
-          <p className="text-lg md:text-xl mb-8" style={{ color: 'rgba(255,255,255,0.85)' }}>{config.subtitle}</p>
+          <p className="text-lg md:text-xl mb-8 mx-auto" style={{ color: 'var(--color-text-secondary)', maxWidth: '36rem' }}>
+            {config.subtitle}
+          </p>
         )}
         {config.ctaText && config.ctaUrl && <CtaButton href={config.ctaUrl} text={config.ctaText} />}
       </div>
@@ -44,10 +75,12 @@ function HeroCentered({ config }: Props) {
 
 function HeroSplit({ config }: Props) {
   return (
-    <section className="flex min-h-[480px]" style={{ background: 'var(--color-bg)' }}>
+    <section className="flex min-h-[500px]" style={{ background: 'var(--color-bg)' }}>
       {/* Left: text */}
       <div className="flex-1 flex items-center px-8 md:px-16 py-16">
         <div className="max-w-lg">
+          <div className="w-10 h-1 rounded-full mb-6"
+            style={{ background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))' }} />
           {config.title && (
             <h1 className="text-4xl md:text-5xl font-bold mb-5 leading-tight"
               style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--font-weight-heading)', color: 'var(--color-text)' }}>
@@ -65,11 +98,11 @@ function HeroSplit({ config }: Props) {
         className="hidden md:flex w-[42%] items-center justify-center relative overflow-hidden"
         style={{ background: 'linear-gradient(145deg, var(--color-primary), var(--color-accent))' }}
       >
-        {/* Decorative circles */}
-        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-20" style={{ background: '#fff' }} />
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full opacity-10" style={{ background: '#fff' }} />
-        <div className="relative text-center px-8">
-          <div className="text-7xl font-black opacity-20 leading-none select-none" style={{ color: '#fff', fontFamily: 'var(--font-heading)' }}>
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-10" style={{ background: '#fff' }} />
+        <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full opacity-10" style={{ background: '#fff' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 rounded-full opacity-5" style={{ background: '#fff' }} />
+        <div className="relative text-center px-8 z-10">
+          <div className="text-8xl font-black opacity-15 leading-none select-none" style={{ color: '#fff', fontFamily: 'var(--font-heading)' }}>
             {config.title?.slice(0, 2) ?? ''}
           </div>
         </div>
@@ -81,10 +114,12 @@ function HeroSplit({ config }: Props) {
 function HeroMinimal({ config }: Props) {
   return (
     <section
-      className="flex items-center justify-center min-h-[420px] px-6 py-20 text-center"
+      className="flex items-center justify-center min-h-[440px] px-6 py-24 text-center"
       style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}
     >
       <div className="max-w-2xl mx-auto">
+        <div className="w-10 h-1 rounded-full mx-auto mb-6"
+          style={{ background: 'var(--color-accent)' }} />
         {config.title && (
           <h1 className="text-4xl md:text-6xl font-bold mb-5 leading-tight"
             style={{ fontFamily: 'var(--font-heading)', fontWeight: 'var(--font-weight-heading)', color: 'var(--color-primary)' }}>
@@ -92,21 +127,11 @@ function HeroMinimal({ config }: Props) {
           </h1>
         )}
         {config.subtitle && (
-          <p className="text-lg md:text-xl mb-8" style={{ color: 'var(--color-text-secondary)' }}>{config.subtitle}</p>
+          <p className="text-lg md:text-xl mb-8 mx-auto" style={{ color: 'var(--color-text-secondary)', maxWidth: '36rem' }}>
+            {config.subtitle}
+          </p>
         )}
-        {config.ctaText && config.ctaUrl && (
-          <a
-            href={config.ctaUrl}
-            className="inline-block px-8 py-3 font-semibold border-2 transition-colors hover:opacity-80"
-            style={{
-              borderColor: 'var(--color-primary)',
-              color: 'var(--color-primary)',
-              borderRadius: 'var(--border-radius)',
-            }}
-          >
-            {config.ctaText}
-          </a>
-        )}
+        {config.ctaText && config.ctaUrl && <CtaButton href={config.ctaUrl} text={config.ctaText} outline />}
       </div>
     </section>
   );
