@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   if (siteId) {
     const { data: site } = await supabase
       .from('sites')
-      .select('name, module_config')
+      .select('name, module_config, theme_config')
       .eq('id', siteId)
       .single();
     if (site) {
@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
         .filter(([, v]) => v.enabled)
         .map(([k]) => k)
         .join(', ');
-      siteContext = `\n\n目前網站名稱：${site.name}\n已啟用的模組：${enabledModules || '無'}`;
+      const aiPrompt = (site.theme_config as any)?.ai_prompt;
+      siteContext = `\n\n目前網站名稱：${site.name}\n已啟用的模組：${enabledModules || '無'}${aiPrompt ? `\n網站風格描述：${aiPrompt}` : ''}`;
     }
   }
 

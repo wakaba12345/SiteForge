@@ -30,13 +30,18 @@ export function ThemeProvider({ theme, children }: Props) {
     .map((f) => `family=${encodeURIComponent(f)}:wght@400;500;600;700`)
     .join('&');
 
+  const cssVarString = Object.entries(cssVars)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(';');
+
   return (
-    <div style={cssVars}>
+    <>
+      <style>{`:root{${cssVarString}}`}</style>
       <link
         rel="stylesheet"
         href={`https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`}
       />
       {children}
-    </div>
+    </>
   );
 }
