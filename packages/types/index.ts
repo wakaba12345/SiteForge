@@ -111,6 +111,10 @@ export interface SeoConfig {
   ogImage: string;
   favicon: string;
   language: string;
+  vercel_project_id?: string;
+  vercel_url?: string;
+  admin_password?: string;
+  admin_hmac_secret?: string;
 }
 
 export interface Site {

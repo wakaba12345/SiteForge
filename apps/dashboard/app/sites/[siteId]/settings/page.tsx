@@ -3,12 +3,28 @@
 import { useEffect, useState } from 'react';
 import type { Site } from '@siteforge/types';
 
+interface DeployResult {
+  url: string;
+  adminPassword: string;
+  projectId: string;
+}
+
 export default function SettingsPage({ params }: { params: { siteId: string } }) {
   const [site, setSite] = useState<Site | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [deploying, setDeploying] = useState(false);
+  const [deployResult, setDeployResult] = useState<DeployResult | null>(null);
+  const [deployError, setDeployError] = useState('');
+
   useEffect(() => {
-    fetch(`/api/sites/${params.siteId}`).then((r) => r.json()).then(setSite);
+    fetch(`/api/sites/${params.siteId}`).then((r) => r.json()).then((s) => {
+      setSite(s);
+      const seo = s?.seo_config as any;
+      if (seo?.vercel_url) {
+        setDeployResult({ url: seo.vercel_url, adminPassword: seo.admin_password ?? '', projectId: seo.vercel_project_id ?? '' });
+      }
+    });
   }, [params.siteId]);
 
   async function save() {
@@ -25,6 +41,21 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
       }),
     });
     setSaving(false);
+  }
+
+  async function deploy() {
+    setDeploying(true);
+    setDeployError('');
+    try {
+      const res = await fetch(`/api/sites/${params.siteId}/deploy`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? '部署失敗');
+      setDeployResult(data);
+    } catch (e) {
+      setDeployError(e instanceof Error ? e.message : '部署失敗，請再試一次');
+    } finally {
+      setDeploying(false);
+    }
   }
 
   if (!site) return <div className="text-sm text-slate-400">載入中…</div>;
@@ -77,7 +108,7 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col gap-4">
+      <div className="bg-white rounded-xl border border-slate-200 p-5 mb-4 flex flex-col gap-4">
         <h2 className="font-medium text-slate-700 text-sm">SEO</h2>
         {(['title', 'description'] as const).map((key) => (
           <div key={key}>
@@ -103,6 +134,73 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
             <option value="en">English</option>
           </select>
         </div>
+      </div>
+
+      {/* Deploy section */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-col gap-4">
+        <div>
+          <h2 className="font-medium text-slate-700 text-sm">部署站台</h2>
+          <p className="text-xs text-slate-400 mt-0.5">
+            自動在 Vercel 建立專案並部署，環境變數會自動設定。
+          </p>
+        </div>
+
+        {deployResult && (
+          <div className="rounded-xl bg-green-50 border border-green-200 p-4 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-green-600">✓</span>
+              <span className="text-sm font-medium text-green-900">已部署成功</span>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">站台網址（部署完成後可用）</p>
+              <a
+                href={deployResult.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-600 hover:underline break-all"
+              >
+                {deployResult.url}
+              </a>
+            </div>
+            {deployResult.adminPassword && (
+              <div>
+                <p className="text-xs text-slate-500 mb-1">後台管理密碼（請記錄）</p>
+                <code className="text-sm bg-slate-100 px-2 py-1 rounded font-mono">
+                  {deployResult.adminPassword}
+                </code>
+              </div>
+            )}
+            <p className="text-xs text-slate-400">
+              後台管理網址：{deployResult.url}/admin
+            </p>
+          </div>
+        )}
+
+        {deployError && (
+          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            {deployError}
+          </div>
+        )}
+
+        <button
+          onClick={deploy}
+          disabled={deploying}
+          className="w-full rounded-xl bg-slate-900 py-3 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50 transition-colors"
+        >
+          {deploying ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              部署中，約需 30-60 秒…
+            </span>
+          ) : deployResult ? '重新部署' : '▲ 部署至 Vercel'}
+        </button>
+
+        <p className="text-xs text-slate-400">
+          需在 Dashboard 環境變數設定 <code className="bg-slate-100 px-1 rounded">VERCEL_TOKEN</code>（可至 vercel.com/account/tokens 建立）。
+        </p>
       </div>
     </div>
   );
