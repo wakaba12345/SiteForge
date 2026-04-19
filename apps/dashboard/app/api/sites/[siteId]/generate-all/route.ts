@@ -183,6 +183,23 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
     await service.from('marquee_items').insert(items);
   }
 
+  // Trigger revalidation on the deployed site so changes appear immediately
+  const siteUrl = (site.seo_config as any)?.vercel_url;
+  if (siteUrl && process.env.REVALIDATION_SECRET) {
+    try {
+      await fetch(`${siteUrl}/api/revalidate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-revalidation-secret': process.env.REVALIDATION_SECRET,
+        },
+        body: JSON.stringify({ paths: ['/', '/articles', '/news'] }),
+      });
+    } catch {
+      // Non-fatal: site may not be deployed yet
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     summary: {
