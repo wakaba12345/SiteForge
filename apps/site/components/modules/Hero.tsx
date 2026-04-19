@@ -44,7 +44,7 @@ function HeroCentered({ config }: Props) {
 
 function HeroSplit({ config }: Props) {
   return (
-    <section className="flex min-h-[480px]" style={{ background: 'var(--color-background)' }}>
+    <section className="flex min-h-[480px]" style={{ background: 'var(--color-bg)' }}>
       {/* Left: text */}
       <div className="flex-1 flex items-center px-8 md:px-16 py-16">
         <div className="max-w-lg">
