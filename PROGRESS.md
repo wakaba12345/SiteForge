@@ -1,6 +1,6 @@
 # SiteForge — Build Progress
 
-> Last updated: 2026-04-20
+> Last updated: 2026-04-20 (session 2)
 
 ---
 
@@ -46,7 +46,9 @@ siteforge/
 |------|------|
 | **Marquee** | 跑馬燈公告，CSS animation，overflow 正確 clip |
 | **Hero** | 三種版型：centered / split / minimal，支援背景圖（next/image） |
-| **FeaturesSection** | 獨立卡片（01/02/03 編號），資料從 module_config 來，不跳頁 |
+| **FeaturesSection** | 差異化優勢卡片（01/02/03 編號），「為什麼選擇我們」，不跳頁 |
+| **ProcessSection** | 服務流程步驟（01→02→03→04），漸層圓形編號，消除合作疑慮 |
+| **CtaSection** | 底部最終轉換區，primary 色全寬背景 + accent 按鈕，最後推一把 |
 | **NewsFeed** | 最新消息（客戶自填），list / card 版型 |
 | **ArticleGrid** | 文章列表，magazine / grid / list 版型 |
 | **ContactForm** | 聯絡表單，存 DB（不發 email，刻意設計） |
@@ -118,7 +120,8 @@ JapanLive 風格深色海軍藍 UI，每個客戶站都有獨立的 `/admin`：
 |------|------|
 | 聯絡表單不發 email | 保持簡單，存 DB 即可，避免 Resend/SMTP 複雜度 |
 | CSS Custom Properties | 所有模組共用一套 var，換主題只需改 :root，無需改元件 |
-| Features 獨立於 Articles | Articles = 知識庫（要跳頁閱讀），Features = 首頁卡片（自包含） |
+| Features 獨立於 Articles | Articles = 知識庫（要跳頁閱讀），Features = 差異化卡片（自包含，不跳頁） |
+| JapanLive 轉換漏斗為 default | 模組順序：Hero → 差異化 → 流程 → 知識庫 → 消息 → 最終CTA → 表單，參考 japanlive.info 電商轉換邏輯 |
 | 最新消息手動填寫 | 客戶自行公告，非 RSS 自動抓，不需 cronjob |
 | No @tailwindcss/typography | 用自訂 .prose CSS（使用 CSS vars），避免插件依賴 |
 | Inline style fallbacks | 關鍵 layout 屬性（gap, overflow, minHeight）加 inline style，防 Tailwind purge 問題 |
@@ -127,11 +130,11 @@ JapanLive 風格深色海軍藍 UI，每個客戶站都有獨立的 `/admin`：
 
 ## 已知問題 / 待辦
 
-- [ ] 文章分類標籤目前只是裝飾（沒有篩選功能）
-- [ ] 聯絡表單送出通知（目前只存 DB，client 需自行查看）
+- [x] **文章分類標籤篩選**：`/articles` 頁加入 category 篩選 pills，純 Server Component + URL searchParams，點選即篩選，選中狀態用 primary 色高亮
+- [x] **Hero 背景圖直接上傳**：settings 頁加入「上傳圖片」按鈕，呼叫既有 `/api/media` 上傳至 Supabase Storage，自動填回 URL 欄位
+- [x] **聯絡表單可見性**：SiteNav 加入「聯絡表單」連結 + 未讀數量 badge；contacts 頁面加入「全部標記已讀」Server Action 按鈕；layout 並行查詢未讀數（不增加額外延遲）
 - [ ] RSS 自動抓新聞功能（討論中，尚未實作）
 - [ ] 多語系支援（目前預設繁體中文）
-- [ ] 圖片上傳至 Supabase Storage（Hero 背景圖目前填 URL）
 
 ---
 

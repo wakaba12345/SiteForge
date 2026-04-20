@@ -3,15 +3,18 @@
 import { useEffect, useState } from 'react';
 import type { ModuleConfig, SocialConfig } from '@siteforge/types';
 
-const MODULE_META: Record<keyof ModuleConfig, { label: string; desc: string }> = {
-  marquee: { label: '跑馬燈', desc: '頁面頂部的滾動文字公告' },
-  hero: { label: 'Hero', desc: '首頁大圖或影片橫幅' },
-  news: { label: '最新消息', desc: '顯示最新消息列表' },
-  articles: { label: '文章', desc: '文章列表與詳情頁' },
-  contact: { label: '聯絡表單', desc: '讓訪客發送訊息' },
-  footer: { label: '頁尾', desc: '顯示頁尾連結與版權' },
-  social: { label: '社群連結', desc: '浮動的 LINE / Facebook / Email 按鈕' },
-};
+const MODULE_LIST: Array<{ key: keyof ModuleConfig; label: string; desc: string }> = [
+  { key: 'marquee', label: '跑馬燈', desc: '頁面頂部的滾動文字公告' },
+  { key: 'hero', label: 'Hero', desc: '首頁大圖或影片橫幅' },
+  { key: 'features', label: '差異化優勢', desc: '為什麼選擇我們——顯示競爭優勢卡片' },
+  { key: 'process', label: '服務流程', desc: '合作步驟說明，消除客戶疑慮' },
+  { key: 'articles', label: '文章知識庫', desc: '文章列表與詳情頁，建立專業形象' },
+  { key: 'news', label: '最新消息', desc: '公告、獲獎、媒體曝光，建立信任' },
+  { key: 'cta', label: '最終 CTA', desc: '底部強力號召行動，推動訪客聯絡' },
+  { key: 'contact', label: '聯絡表單', desc: '讓訪客發送訊息' },
+  { key: 'footer', label: '頁尾', desc: '顯示頁尾連結與版權' },
+  { key: 'social', label: '社群連結', desc: '浮動的 LINE / Facebook / Email 按鈕' },
+];
 
 export default function ModulesPage({ params }: { params: { siteId: string } }) {
   const [config, setConfig] = useState<ModuleConfig | null>(null);
@@ -81,12 +84,12 @@ export default function ModulesPage({ params }: { params: { siteId: string } }) 
         {saving && <span className="text-xs text-slate-400">儲存中…</span>}
       </div>
       <div className="flex flex-col gap-3">
-        {(Object.keys(MODULE_META) as Array<keyof ModuleConfig>).map((key) => (
+        {MODULE_LIST.map(({ key, label, desc }) => (
           <div key={key} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="px-5 py-4 flex items-center justify-between">
               <div>
-                <p className="font-medium text-slate-900 text-sm">{MODULE_META[key].label}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{MODULE_META[key].desc}</p>
+                <p className="font-medium text-slate-900 text-sm">{label}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{desc}</p>
               </div>
               <button
                 onClick={() => toggle(key)}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Site } from '@siteforge/types';
 
 interface DeployResult {
@@ -13,6 +13,8 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
   const [site, setSite] = useState<Site | null>(null);
   const [saving, setSaving] = useState(false);
   const [heroImageUrl, setHeroImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const heroFileRef = useRef<HTMLInputElement>(null);
 
   const [deploying, setDeploying] = useState(false);
   const [deployResult, setDeployResult] = useState<DeployResult | null>(null);
@@ -28,6 +30,23 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
       }
     });
   }, [params.siteId]);
+
+  async function handleHeroFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('site_id', params.siteId);
+      const res = await fetch('/api/media', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok) setHeroImageUrl(data.url);
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
 
   async function save() {
     if (!site) return;
@@ -181,14 +200,31 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
           <p className="text-xs text-slate-400 mt-0.5">設定 Hero 區塊的背景圖片，建議尺寸 1920×1080。</p>
         </div>
         <div>
-          <label className="block text-xs text-slate-500 mb-1">背景圖片網址</label>
-          <input
-            type="url"
-            value={heroImageUrl}
-            onChange={(e) => setHeroImageUrl(e.target.value)}
-            placeholder="https://example.com/hero.jpg"
-            className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <label className="block text-xs text-slate-500 mb-1">背景圖片</label>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={heroImageUrl}
+              onChange={(e) => setHeroImageUrl(e.target.value)}
+              placeholder="https://example.com/hero.jpg 或點選上傳"
+              className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={() => heroFileRef.current?.click()}
+              disabled={uploading}
+              className="shrink-0 bg-slate-100 text-slate-700 text-sm px-3 py-2 rounded-lg hover:bg-slate-200 disabled:opacity-50 border border-slate-300 whitespace-nowrap"
+            >
+              {uploading ? '上傳中…' : '上傳圖片'}
+            </button>
+            <input
+              ref={heroFileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleHeroFileChange}
+            />
+          </div>
           {heroImageUrl && (
             <div className="mt-2 rounded-lg overflow-hidden border border-slate-200 aspect-video relative">
               <img src={heroImageUrl} alt="Hero 預覽" className="w-full h-full object-cover" />
@@ -202,7 +238,7 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
         <div>
           <h2 className="font-medium text-slate-700 text-sm">部署站台</h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            自動在 Vercel 建立專案並部署，環境變數會自動設定。
+            首次部署會建立永久網址，之後<strong className="text-slate-600">套用內容不需重新部署</strong>。只有修改程式碼才需要再次部署。
           </p>
         </div>
 
@@ -213,7 +249,7 @@ export default function SettingsPage({ params }: { params: { siteId: string } })
               <span className="text-sm font-medium text-green-900">已部署成功</span>
             </div>
             <div>
-              <p className="text-xs text-slate-500 mb-1">站台網址（部署完成後可用）</p>
+              <p className="text-xs text-slate-500 mb-1">永久站台網址（內容更新不需重新部署）</p>
               <a
                 href={deployResult.url}
                 target="_blank"

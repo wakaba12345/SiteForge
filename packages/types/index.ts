@@ -75,6 +75,25 @@ export interface SocialConfig {
   position: 'left' | 'right';
 }
 
+export interface ProcessStep {
+  title: string;
+  description: string;
+}
+
+export interface ProcessConfig {
+  enabled: boolean;
+  title: string;
+  steps: ProcessStep[];
+}
+
+export interface CtaConfig {
+  enabled: boolean;
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonUrl: string;
+}
+
 export interface ModuleConfig {
   marquee: MarqueeConfig;
   news: NewsConfig;
@@ -84,6 +103,8 @@ export interface ModuleConfig {
   footer: FooterConfig;
   social: SocialConfig;
   features?: FeaturesConfig;
+  process?: ProcessConfig;
+  cta?: CtaConfig;
 }
 
 export interface ThemeColors {

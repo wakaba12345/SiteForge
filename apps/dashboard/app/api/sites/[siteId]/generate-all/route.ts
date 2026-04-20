@@ -2,113 +2,103 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, createServiceClient } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
 
-const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣各行業的品牌美學。根據業種與描述，生成精緻、專業的繁體中文網站內容與設計配置。
+const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師與文案策略師，熟悉台灣各行業的品牌美學與轉換漏斗設計。根據業種與描述，生成精緻、專業的繁體中文網站內容與設計配置。
 
-設計哲學（非常重要）：
-- 背景以白色 (#ffffff) 或極淺灰 (#f8fafc / #f4f6f8) 為主，絕不用鮮豔顏色當背景
-- primary 顏色用於標題、按鈕、強調線，不做大面積背景
+## 轉換漏斗設計哲學（Landing Page 核心邏輯）
+參考電商式轉換漏斗，首頁必須引導訪客完成完整決策旅程：
+1. Hero → 精準擊中痛點，讓訪客說「這就是我要的」
+2. FeaturesSection（差異化）→ 為什麼選我而不選別人，3-6個具體競爭優勢
+3. ProcessSection（服務流程）→ 消除疑慮，「合作起來很簡單」，3-4個步驟
+4. ArticleGrid（知識庫）→ 建立專業形象，讓訪客覺得「他們真的懂」
+5. NewsFeed（社會信任）→ 媒體、獎項、里程碑，建立可信度
+6. CtaSection（最終轉換）→ 情緒高峰時推一把，強力號召行動
+7. ContactForm → 讓聯絡變得毫不費力
+
+## 設計哲學
+- 背景以白色 (#ffffff) 或極淺灰 (#f8fafc) 為主，絕不用鮮豔顏色當背景
+- primary 顏色用於標題、按鈕、強調線，不做大面積背景（CtaSection 例外）
 - 字型只用兩種：heading 字型 + body 固定用 Noto Sans TC
-- 大量留白：section padding 充裕、行距 1.7、卡片 padding 充足
-- 卡片用極淺陰影 + 細邊框，hover 時加深陰影
+- 大量留白，行距 1.7，卡片 padding 充足
 - 顏色深沉克制，避免糖果色、霓虹色
 
-配色方案（依業種精確選擇）：
-- 律師 / 法律 / 公證：primary: #1a2f4a（深海軍藍）, accent: #b8973a（金色）, background: #ffffff, surface: #f7f8fa
-- 醫療 / 診所 / 健康：primary: #1d4e6b（深藍綠）, accent: #2a9d8f（青綠）, background: #ffffff, surface: #f0f7f9
-- 財務 / 會計 / 顧問：primary: #1e3a2f（深墨綠）, accent: #4a7c6f（中綠）, background: #ffffff, surface: #f4f7f5
-- 科技 / 軟體 / 新創：primary: #1e1b4b（深靛紫）, accent: #4f46e5（亮靛）, background: #ffffff, surface: #f8f7ff
-- 設計 / 創意 / 攝影：primary: #111111（近黑）, accent: #e63946（紅）, background: #ffffff, surface: #f9f9f9
-- 餐飲 / 咖啡 / 食品：primary: #3d1f0d（深咖啡）, accent: #c9722a（橙棕）, background: #fefcf8, surface: #f5f0e8
-- 不動產 / 建築：primary: #2c3e50（深藍灰）, accent: #c0922a（金）, background: #ffffff, surface: #f5f6f7
-- 教育 / 補習班：primary: #1a3a5c（深藍）, accent: #e67e22（橙）, background: #ffffff, surface: #faf7f2
-- 零售 / 電商：primary: #212121（近黑）, accent: #e91e63（粉紅）, background: #ffffff, surface: #fafafa
-- 其他一般服務：primary: #1f2d3d（深藍灰）, accent: #3498db（藍）, background: #ffffff, surface: #f4f7fb
+## 配色方案
+- 律師 / 法律：primary: #1a2f4a, accent: #b8973a, background: #ffffff, surface: #f7f8fa
+- 醫療 / 診所：primary: #1d4e6b, accent: #2a9d8f, background: #ffffff, surface: #f0f7f9
+- 財務 / 會計：primary: #1e3a2f, accent: #4a7c6f, background: #ffffff, surface: #f4f7f5
+- 科技 / 軟體：primary: #1e1b4b, accent: #4f46e5, background: #ffffff, surface: #f8f7ff
+- 設計 / 創意：primary: #111111, accent: #e63946, background: #ffffff, surface: #f9f9f9
+- 餐飲 / 咖啡：primary: #3d1f0d, accent: #c9722a, background: #fefcf8, surface: #f5f0e8
+- 不動產 / 建築：primary: #2c3e50, accent: #c0922a, background: #ffffff, surface: #f5f6f7
+- 教育 / 補習：primary: #1a3a5c, accent: #e67e22, background: #ffffff, surface: #faf7f2
+- 零售 / 電商：primary: #212121, accent: #e91e63, background: #ffffff, surface: #fafafa
+- 其他服務：primary: #1f2d3d, accent: #3498db, background: #ffffff, surface: #f4f7fb
 
-字型配對規則（選最符合業種的一組）：
-- 律師 / 醫療 / 財務 / 顧問：headingFont: "Manrope", bodyFont: "Noto Sans TC"
-- 科技 / 新創 / SaaS：headingFont: "Plus Jakarta Sans", bodyFont: "Noto Sans TC"
-- 設計 / 創意 / 個人品牌：headingFont: "Space Grotesk", bodyFont: "Noto Sans TC"
-- 餐飲 / 文化 / 傳統：headingFont: "Noto Serif TC", bodyFont: "Noto Sans TC"
-- 教育 / 補習 / 一般：headingFont: "Inter", bodyFont: "Noto Sans TC"
+## 字型配對
+- 律師 / 醫療 / 財務 / 顧問：headingFont: "Manrope"
+- 科技 / 新創：headingFont: "Plus Jakarta Sans"
+- 設計 / 創意：headingFont: "Space Grotesk"
+- 餐飲 / 文化：headingFont: "Noto Serif TC"
+- 教育 / 一般：headingFont: "Inter"
 
-版型選擇規則：
-- heroLayout:
-  - "minimal"：律師、醫療、顧問、財務、設計、科技、個人品牌 → 留白大字，高端感
-  - "split"：不動產、建築、企業服務 → 左文右色塊，商務感
-  - "centered"：餐飲、零售、活動、一般消費品 → 漸層底色，親和力
-- articlesLayout:
-  - "magazine"：預設選項，適合大多數業種 → 第一篇大圖特顯，其餘三欄小卡
-  - "grid"：適合圖片豐富、產品展示型
-  - "list"：適合簡潔文字型
-- newsLayout:
-  - "card"：零售、餐飲、消息量多
-  - "list"：律師、醫療、顧問等專業服務
+## 版型規則
+- heroLayout: "minimal"（律師/醫療/顧問/科技）| "split"（不動產/企業服務）| "centered"（餐飲/零售）
+- articlesLayout: "magazine"（預設）| "grid"（圖片豐富）| "list"（簡潔文字）
+- newsLayout: "list"（專業服務）| "card"（零售/餐飲）
 
-內容規則（Landing Page 轉換導向，非傳統企業文章）：
-- hero title：直接說出最大利益或解決的核心問題，10 字以內，有衝擊力（例：「讓企業稅務不再是負擔」「3 個月讓業績翻倍」）
-- hero subtitle：對目標客戶說話，25 字左右，點出痛點或承諾（例：「我們服務超過 200 家中小企業，幫助他們節省 30% 營運成本」）
-- articles 若需要文章系統則生成 3-4 篇「知識庫文章」，是訪客會想深入閱讀的專業內容（例：行業指南、常見問題詳解、案例分析、實用教學），不是廣告文案。每篇 content 至少 400 字，善用 <h2><h3><p><ul><strong> 排版。若不需要文章系統則 articles 輸出空陣列，並將 articlesEnabled 設為 false
-- features 生成 3-6 個「核心優勢/服務特色」項目（自包含卡片，直接顯示在首頁，不跳頁）：每個 item 有 title（8字以內，有力）和 description（50-70字，說明具體優勢或服務特色）
-- featuresTitle 生成 features 區塊的標題（例：「為什麼選擇我們」「我們的服務特色」「核心優勢」）
-- news 生成 4 則最新消息，內容建立可信度（例：「榮獲 XX 認證」「服務突破 100 家客戶」「媒體報導」「新服務上線」），這是客戶自己的公告
-- marquee 生成 5 則跑馬燈公告，格式像真實新聞動態：受獎/受邀演講/媒體曝光/新服務上線/重要認證（例：「本所陳大明律師受邀擔任 2025 法務部企業法遵論壇講師」「榮獲 2024 台灣服務業金牌獎」「新增日文諮詢服務，即日起接受預約」「接受自由時報採訪報導，談中小企業常見法律風險」），語氣正式專業，不用廣告口吻
-- 所有文字繁體中文，貼近台灣用語，語氣親切有力，不用官腔
+## 內容規則（每個欄位都要精心設計）
+
+**hero**
+- title：10字以內，直接說出最大利益，有衝擊力（例：「讓企業稅務不再是負擔」）
+- subtitle：25字左右，點出痛點或承諾（例：「服務超過200家中小企業，平均節省30%法務成本」）
+
+**featuresTitle + features**（為什麼選我，差異化）
+- title：「為什麼選擇我們」「我們和別人哪裡不一樣」「我們的核心優勢」之類
+- 生成 3-5 個具體競爭優勢，每個 item：title 8字以內有力，description 50-70字說明「我們做到了什麼、別人做不到」
+
+**processTitle + process**（消除疑慮，合作流程）
+- title：「合作流程」「如何開始」「四步驟輕鬆開始」之類
+- 生成 3-4 個步驟，每個 step：title 8字以內清楚，description 30-40字說明這個步驟做什麼
+
+**ctaTitle + ctaDescription + ctaButtonText**（最終轉換推力）
+- ctaTitle：15字以內，情緒高峰時的號召，讓人想立刻行動（例：「準備好讓法律保護你的事業了嗎」「今天就開始，免費初次諮詢」）
+- ctaDescription：30字左右，降低行動門檻（例：「第一次諮詢完全免費，30分鐘了解您的需求，無任何費用承諾」）
+- ctaButtonText：5字以內，明確指令（例：「立即預約諮詢」「免費索取報告」「馬上聯絡我們」）
+
+**articles**
+- 若需要知識庫則生成 3-4 篇「知識庫文章」，是訪客想深入閱讀的專業內容（行業指南、常見問題、案例分析）
+- 每篇 content 至少 400 字，善用 <h2><h3><p><ul><strong> 排版
+- 若不需要則輸出空陣列並設 articlesEnabled: false
+
+**news**（社會信任佐證）
+- 生成 4 則最新消息，格式像真實公告：媒體曝光/獲獎/里程碑/新服務
+- 語氣正式，具體數字/媒體名/日期讓它看起來真實
+
+**marquee**
+- 5 則跑馬燈，真實新聞動態感：受邀演講/媒體採訪/認證/客戶里程碑
+- 語氣專業，帶有具體資訊
+
+所有文字繁體中文，貼近台灣用語，語氣親切有力，不用官腔。
 
 重要：只輸出 JSON 物件，第一個字元是 {，最後一個字元是 }，不要有任何其他輸出。
 
 {
-  "layout": {
-    "heroLayout": "<centered|split|minimal>",
-    "articlesLayout": "<magazine|grid|list>",
-    "newsLayout": "<list|card>"
-  },
+  "layout": { "heroLayout": "<centered|split|minimal>", "articlesLayout": "<magazine|grid|list>", "newsLayout": "<list|card>" },
   "articlesEnabled": true,
   "theme": {
-    "colors": {
-      "primary": "<深沉主色>",
-      "accent": "<點綴色>",
-      "background": "#ffffff 或極淺色",
-      "surface": "<比 background 稍深，用於卡片底色>",
-      "text": "#1a1a1a",
-      "textSecondary": "#64748b",
-      "border": "#e2e8f0"
-    },
-    "typography": {
-      "headingFont": "<依業種選擇>",
-      "bodyFont": "Noto Sans TC",
-      "baseFontSize": "16px",
-      "headingWeight": "700",
-      "lineHeight": "1.7"
-    },
-    "layout": {
-      "maxWidth": "1200px",
-      "borderRadius": "<0px|6px|12px>",
-      "spacing": "1.5rem",
-      "headerStyle": "fixed"
-    }
+    "colors": { "primary": "<色碼>", "accent": "<色碼>", "background": "#ffffff", "surface": "<色碼>", "text": "#1a1a1a", "textSecondary": "#64748b", "border": "#e2e8f0" },
+    "typography": { "headingFont": "<字型>", "bodyFont": "Noto Sans TC", "baseFontSize": "16px", "headingWeight": "700", "lineHeight": "1.7" },
+    "layout": { "maxWidth": "1200px", "borderRadius": "<0px|6px|12px>", "spacing": "1.5rem", "headerStyle": "fixed" }
   },
-  "hero": {
-    "title": "<10 字以內，有力>",
-    "subtitle": "<25 字左右，核心價值>",
-    "ctaText": "<5 字以內>",
-    "ctaUrl": "/contact"
-  },
-  "featuresTitle": "<features 區塊標題>",
-  "features": [
-    { "title": "<8字以內>", "description": "<50-70字具體說明>" }
-  ],
-  "articles": [
-    {
-      "title": "<知識庫文章標題>",
-      "slug": "<英文slug>",
-      "category": "<分類>",
-      "excerpt": "<80-100字摘要>",
-      "content": "<完整HTML，至少400字>"
-    }
-  ],
-  "news": [
-    { "title": "<消息標題>", "content": "<50-100字>" }
-  ],
+  "hero": { "title": "<10字以內>", "subtitle": "<25字左右>", "ctaText": "<5字>", "ctaUrl": "/contact" },
+  "featuresTitle": "<差異化區塊標題>",
+  "features": [ { "title": "<8字以內>", "description": "<50-70字>" } ],
+  "processTitle": "<服務流程區塊標題>",
+  "process": [ { "title": "<8字以內>", "description": "<30-40字>" } ],
+  "ctaTitle": "<最終CTA大標題，15字以內>",
+  "ctaDescription": "<副標，30字>",
+  "ctaButtonText": "<按鈕文字，5字以內>",
+  "articles": [ { "title": "<標題>", "slug": "<英文slug>", "category": "<分類>", "excerpt": "<80-100字>", "content": "<完整HTML，400字以上>" } ],
+  "news": [ { "title": "<消息標題>", "content": "<50-100字>" } ],
   "marquee": ["<文字1>", "<文字2>", "<文字3>", "<文字4>", "<文字5>"]
 }`;
 
@@ -214,6 +204,18 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
       enabled: !!(generated.features?.length),
       title: generated.featuresTitle ?? '為什麼選擇我們',
       items: generated.features ?? [],
+    },
+    process: {
+      enabled: !!(generated.process?.length),
+      title: generated.processTitle ?? '服務流程',
+      steps: generated.process ?? [],
+    },
+    cta: {
+      enabled: true,
+      title: generated.ctaTitle ?? '準備好開始了嗎',
+      description: generated.ctaDescription ?? '立即預約免費初次諮詢，我們將在 24 小時內與您聯繫。',
+      buttonText: generated.ctaButtonText ?? '立即免費諮詢',
+      buttonUrl: '/contact',
     },
     news: {
       ...(site.module_config as any).news,

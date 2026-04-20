@@ -31,3 +31,12 @@ export async function markContactRead(supabase: SupabaseClient, submissionId: st
     .eq('id', submissionId);
   if (error) throw error;
 }
+
+export async function markAllContactsRead(supabase: SupabaseClient, siteId: string) {
+  const { error } = await supabase
+    .from('contact_submissions')
+    .update({ is_read: true })
+    .eq('site_id', siteId)
+    .eq('is_read', false);
+  if (error) throw error;
+}

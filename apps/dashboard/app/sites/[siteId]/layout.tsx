@@ -11,11 +11,11 @@ export default async function SiteLayout({
   params: { siteId: string };
 }) {
   const supabase = createServerClient();
-  const { data: site } = await supabase
-    .from('sites')
-    .select('id, name, slug, status')
-    .eq('id', params.siteId)
-    .single();
+  const [{ data: site }, { count: unreadContacts }] = await Promise.all([
+    supabase.from('sites').select('id, name, slug, status').eq('id', params.siteId).single(),
+    supabase.from('contact_submissions').select('id', { count: 'exact', head: true })
+      .eq('site_id', params.siteId).eq('is_read', false),
+  ]);
 
   if (!site) notFound();
 
@@ -37,7 +37,7 @@ export default async function SiteLayout({
       </header>
 
       <div className="flex flex-1">
-        <SiteNav base={base} />
+        <SiteNav base={base} unreadContacts={unreadContacts ?? 0} />
         <main className="flex-1 p-6 overflow-auto">{children}</main>
       </div>
     </div>

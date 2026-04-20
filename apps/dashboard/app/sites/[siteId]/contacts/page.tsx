@@ -1,13 +1,35 @@
+import { revalidatePath } from 'next/cache';
 import { createServerClient } from '@/lib/supabase-server';
-import { getContactSubmissions, markContactRead } from '@siteforge/db';
+import { getContactSubmissions, markAllContactsRead } from '@siteforge/db';
 
 export default async function ContactsPage({ params }: { params: { siteId: string } }) {
   const supabase = createServerClient();
   const submissions = await getContactSubmissions(supabase as any, params.siteId);
+  const unreadCount = submissions.filter((s) => !s.is_read).length;
+
+  async function markAllRead() {
+    'use server';
+    const client = createServerClient();
+    await markAllContactsRead(client as any, params.siteId);
+    revalidatePath(`/sites/${params.siteId}/contacts`);
+    revalidatePath(`/sites/${params.siteId}`);
+  }
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-xl font-semibold text-slate-900 mb-6">聯絡表單</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-semibold text-slate-900">聯絡表單</h1>
+        {unreadCount > 0 && (
+          <form action={markAllRead}>
+            <button
+              type="submit"
+              className="text-sm text-slate-500 hover:text-slate-800 border border-slate-300 rounded-lg px-3 py-1.5 hover:bg-slate-50 transition-colors"
+            >
+              全部標記已讀（{unreadCount}）
+            </button>
+          </form>
+        )}
+      </div>
 
       {submissions.length === 0 ? (
         <p className="text-sm text-slate-400">尚無表單提交</p>
@@ -27,7 +49,7 @@ export default async function ContactsPage({ params }: { params: { siteId: strin
                 )}
               </div>
               <dl className="space-y-1">
-                {Object.entries(s.data).map(([k, v]) => (
+                {Object.entries(s.data as Record<string, string>).map(([k, v]) => (
                   <div key={k} className="flex gap-2 text-sm">
                     <dt className="text-slate-400 w-16 shrink-0">{k}</dt>
                     <dd className="text-slate-700 break-all">{v}</dd>
