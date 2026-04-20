@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
@@ -22,6 +22,186 @@ interface PreviewData {
   marquee: string[];
 }
 
+function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: string }) {
+  const c = preview.theme?.colors ?? {};
+  const t = preview.theme?.typography ?? {};
+  const l = preview.layout ?? {};
+  const radius = preview.theme?.layout?.borderRadius ?? '6px';
+
+  const vars = {
+    '--p': c.primary ?? '#1a2f4a',
+    '--a': c.accent ?? '#b8973a',
+    '--bg': c.background ?? '#ffffff',
+    '--sf': c.surface ?? '#f8fafc',
+    '--tx': c.text ?? '#1a1a1a',
+    '--ts': c.textSecondary ?? '#64748b',
+    '--bd': c.border ?? '#e2e8f0',
+    '--hf': `"${t.headingFont ?? 'Inter'}", "Noto Sans TC", sans-serif`,
+    '--r': radius,
+  } as React.CSSProperties;
+
+  return (
+    <div style={{ ...vars, background: 'var(--bg)', fontFamily: '"Noto Sans TC", sans-serif', fontSize: 12 }}
+      className="rounded-xl overflow-hidden border border-slate-200 shadow-md">
+
+      {/* Browser chrome */}
+      <div className="bg-slate-100 px-3 py-2 flex items-center gap-2 border-b border-slate-200">
+        <div className="flex gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-400 block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 block" />
+          <span className="w-2.5 h-2.5 rounded-full bg-green-400 block" />
+        </div>
+        <div className="flex-1 bg-white rounded text-[10px] text-slate-400 px-3 py-0.5 text-center border border-slate-200">
+          yoursite.vercel.app
+        </div>
+      </div>
+
+      {/* Header */}
+      <div style={{ background: 'var(--sf)', borderBottom: '1px solid var(--bd)', padding: '8px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ color: 'var(--p)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 13 }}>{siteName}</span>
+        <div style={{ display: 'flex', gap: 14 }}>
+          {['首頁', '文章', '消息', '聯絡'].map(link => (
+            <span key={link} style={{ color: 'var(--tx)', fontSize: 10 }}>{link}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Hero — minimal */}
+      {l.heroLayout === 'minimal' && (
+        <div style={{ background: 'var(--sf)', borderBottom: '1px solid var(--bd)', padding: '28px 24px', textAlign: 'center' }}>
+          <div style={{ width: 24, height: 3, background: 'var(--a)', margin: '0 auto 10px', borderRadius: 99 }} />
+          <div style={{ color: 'var(--p)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 20, marginBottom: 6, lineHeight: 1.3 }}>{preview.hero?.title}</div>
+          <div style={{ color: 'var(--ts)', fontSize: 11, marginBottom: 12, maxWidth: 360, margin: '0 auto 12px' }}>{preview.hero?.subtitle}</div>
+          <div style={{ display: 'inline-block', border: `2px solid var(--p)`, color: 'var(--p)', padding: '4px 14px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
+        </div>
+      )}
+
+      {/* Hero — split */}
+      {l.heroLayout === 'split' && (
+        <div style={{ display: 'flex', minHeight: 120 }}>
+          <div style={{ flex: 1, background: 'var(--bg)', padding: '24px 28px' }}>
+            <div style={{ width: 20, height: 3, background: 'var(--a)', marginBottom: 8, borderRadius: 99 }} />
+            <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 17, marginBottom: 6, lineHeight: 1.3 }}>{preview.hero?.title}</div>
+            <div style={{ color: 'var(--ts)', fontSize: 10, marginBottom: 10 }}>{preview.hero?.subtitle}</div>
+            <div style={{ display: 'inline-block', background: 'var(--p)', color: '#fff', padding: '4px 12px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
+          </div>
+          <div style={{ width: '38%', background: `linear-gradient(145deg, ${c.primary ?? '#1a2f4a'}, ${c.accent ?? '#b8973a'})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ color: '#fff', fontFamily: 'var(--hf)', fontWeight: 900, fontSize: 36, opacity: 0.15, lineHeight: 1 }}>{preview.hero?.title?.slice(0, 2)}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Hero — centered (gradient) */}
+      {(l.heroLayout === 'centered' || !l.heroLayout) && (
+        <div style={{ background: `linear-gradient(135deg, ${c.primary ?? '#1a2f4a'}, ${c.accent ?? '#b8973a'})`, padding: '28px 24px', textAlign: 'center' }}>
+          <div style={{ width: 24, height: 3, background: 'rgba(255,255,255,0.5)', margin: '0 auto 10px', borderRadius: 99 }} />
+          <div style={{ color: '#fff', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 20, marginBottom: 6 }}>{preview.hero?.title}</div>
+          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, marginBottom: 12 }}>{preview.hero?.subtitle}</div>
+          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', padding: '4px 14px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
+        </div>
+      )}
+
+      {/* Articles */}
+      {(preview.articles?.length ?? 0) > 0 && (
+        <div style={{ background: 'var(--bg)', padding: '18px 20px' }}>
+          <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 13, marginBottom: 12 }}>文章</div>
+
+          {/* Grid */}
+          {(l.articlesLayout === 'grid' || !l.articlesLayout) && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+              {preview.articles.slice(0, 3).map((a, i) => (
+                <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: radius, overflow: 'hidden' }}>
+                  <div style={{ height: 52, background: `linear-gradient(135deg, ${c.primary ?? '#1a2f4a'}28, ${c.accent ?? '#b8973a'}28)` }} />
+                  <div style={{ padding: '8px 10px' }}>
+                    {a.category && <div style={{ color: 'var(--a)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', marginBottom: 2 }}>{a.category}</div>}
+                    <div style={{ color: 'var(--tx)', fontWeight: 600, fontSize: 10, lineHeight: 1.4 }}>{a.title}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Magazine */}
+          {l.articlesLayout === 'magazine' && (
+            <div>
+              <div style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: radius, display: 'flex', marginBottom: 8, overflow: 'hidden' }}>
+                <div style={{ width: '45%', height: 80, background: `linear-gradient(135deg, ${c.primary ?? '#1a2f4a'}33, ${c.accent ?? '#b8973a'}33)`, flexShrink: 0 }} />
+                <div style={{ flex: 1, padding: 10 }}>
+                  {preview.articles[0]?.category && <div style={{ color: 'var(--a)', fontSize: 9, fontWeight: 700, marginBottom: 3 }}>{preview.articles[0].category}</div>}
+                  <div style={{ color: 'var(--tx)', fontWeight: 700, fontSize: 12, lineHeight: 1.4 }}>{preview.articles[0]?.title}</div>
+                  <div style={{ color: 'var(--ts)', fontSize: 9, marginTop: 4 }}>精選內容</div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+                {preview.articles.slice(1, 4).map((a, i) => (
+                  <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: radius, padding: 8 }}>
+                    {a.category && <div style={{ color: 'var(--a)', fontSize: 9, fontWeight: 700, marginBottom: 2 }}>{a.category}</div>}
+                    <div style={{ color: 'var(--tx)', fontWeight: 600, fontSize: 10, lineHeight: 1.4 }}>{a.title}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* List */}
+          {l.articlesLayout === 'list' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {preview.articles.slice(0, 3).map((a, i) => (
+                <div key={i} style={{ background: 'var(--sf)', border: '1px solid var(--bd)', borderRadius: radius, padding: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ width: 52, height: 36, background: `linear-gradient(135deg, ${c.primary ?? '#1a2f4a'}28, ${c.accent ?? '#b8973a'}28)`, borderRadius: 4, flexShrink: 0 }} />
+                  <div>
+                    {a.category && <div style={{ color: 'var(--a)', fontSize: 9, fontWeight: 700, marginBottom: 1 }}>{a.category}</div>}
+                    <div style={{ color: 'var(--tx)', fontWeight: 600, fontSize: 10 }}>{a.title}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* News */}
+      {(preview.news?.length ?? 0) > 0 && (
+        <div style={{ background: 'var(--sf)', borderTop: '1px solid var(--bd)', padding: '14px 20px' }}>
+          <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>最新消息</div>
+          {l.newsLayout === 'card' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
+              {preview.news.slice(0, 3).map((n, i) => (
+                <div key={i} style={{ background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: radius, padding: '8px 10px' }}>
+                  <div style={{ color: 'var(--tx)', fontWeight: 600, fontSize: 10, lineHeight: 1.4 }}>{n.title}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {preview.news.slice(0, 3).map((n, i) => (
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 5, borderBottom: `1px solid var(--bd)` }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--a)', marginTop: 3, flexShrink: 0, display: 'block' }} />
+                  <span style={{ color: 'var(--tx)', fontSize: 10, lineHeight: 1.4 }}>{n.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Marquee strip */}
+      {(preview.marquee?.length ?? 0) > 0 && (
+        <div style={{ background: 'var(--p)', padding: '7px 20px', display: 'flex', gap: 20, overflow: 'hidden' }}>
+          {preview.marquee.slice(0, 4).map((m, i) => (
+            <span key={i} style={{ color: 'rgba(255,255,255,0.85)', fontSize: 10, whiteSpace: 'nowrap' }}>{m}</span>
+          ))}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ background: 'var(--p)', padding: '10px 20px', borderTop: `1px solid rgba(255,255,255,0.1)` }}>
+        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, textAlign: 'center' }}>© {siteName} · All rights reserved</div>
+      </div>
+    </div>
+  );
+}
+
 export default function GeneratePage({ params }: { params: { siteId: string } }) {
   const [tab, setTab] = useState<Tab>('quickbuild');
 
@@ -33,12 +213,17 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
   const [buildResult, setBuildResult] = useState<{ articles: number; news: number; marquee: number } | null>(null);
   const [buildError, setBuildError] = useState('');
   const [siteUrl, setSiteUrl] = useState('');
+  const [siteName, setSiteName] = useState('');
   const [iframeKey, setIframeKey] = useState(0);
 
   useEffect(() => {
     fetch(`/api/sites/${params.siteId}`)
       .then(r => r.json())
-      .then(site => { const url = site?.seo_config?.vercel_url; if (url) setSiteUrl(url); })
+      .then(site => {
+        const url = site?.seo_config?.vercel_url;
+        if (url) setSiteUrl(url);
+        if (site?.name) setSiteName(site.name);
+      })
       .catch(() => {});
   }, [params.siteId]);
 
@@ -180,101 +365,12 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
 
           {/* Preview card */}
           {preview && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900">生成預覽</h3>
-                <span className="text-xs text-slate-400">確認後再套用至網站</span>
-              </div>
+            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+              {/* Visual preview */}
+              <VisualPreview preview={preview} siteName={siteName} />
 
-              {/* Colors */}
-              {preview.theme?.colors && (
-                <div>
-                  <p className="text-xs font-medium text-slate-500 mb-2">配色</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {Object.entries(preview.theme.colors).map(([key, val]) => (
-                      <div key={key} className="flex flex-col items-center gap-1">
-                        <div className="w-8 h-8 rounded-lg border border-slate-200 shadow-sm" style={{ background: val as string }} />
-                        <span className="text-[10px] text-slate-400">{key}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    字型：{preview.theme.typography?.headingFont} / {preview.theme.typography?.bodyFont}
-                  </p>
-                </div>
-              )}
-
-              {/* Layout */}
-              {preview.layout && (
-                <div>
-                  <p className="text-xs font-medium text-slate-500 mb-2">版型</p>
-                  <div className="flex gap-2 flex-wrap text-xs">
-                    {[
-                      { label: 'Hero', value: preview.layout.heroLayout },
-                      { label: '文章', value: preview.layout.articlesLayout },
-                      { label: '消息', value: preview.layout.newsLayout },
-                    ].map((item) => item.value && (
-                      <span key={item.label} className="bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
-                        {item.label}：{item.value}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Hero */}
-              {preview.hero && (
-                <div>
-                  <p className="text-xs font-medium text-slate-500 mb-1">Hero 區塊</p>
-                  <p className="text-sm font-bold text-slate-800">{preview.hero.title}</p>
-                  <p className="text-xs text-slate-500">{preview.hero.subtitle}</p>
-                </div>
-              )}
-
-              {/* Articles */}
-              {preview.articles?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-slate-500 mb-2">文章（{preview.articles.length} 篇）</p>
-                  <div className="space-y-1">
-                    {preview.articles.map((a, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <span className="text-slate-300">•</span>
-                        <span className="text-slate-700">{a.title}</span>
-                        {a.category && <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">{a.category}</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* News */}
-              {preview.news?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-slate-500 mb-2">最新消息（{preview.news.length} 則）</p>
-                  <div className="space-y-1">
-                    {preview.news.map((n, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <span className="text-slate-300">•</span>
-                        <span className="text-slate-700">{n.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Marquee */}
-              {preview.marquee?.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-slate-500 mb-2">跑馬燈（{preview.marquee.length} 則）</p>
-                  <div className="flex flex-wrap gap-2">
-                    {preview.marquee.map((m, i) => (
-                      <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">{m}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-2 border-t border-slate-100">
+              {/* Action buttons */}
+              <div className="flex gap-3 p-4 border-t border-slate-100 bg-slate-50">
                 <button
                   onClick={handleApply}
                   disabled={applying}
