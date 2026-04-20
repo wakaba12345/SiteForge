@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSiteConfig } from '@/lib/config';
 import { getArticleBySlug, createServerClient } from '@siteforge/db';
@@ -7,6 +8,24 @@ export const revalidate = 3600;
 
 interface Props {
   params: { slug: string };
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const site = await getSiteConfig();
+  const supabase = createServerClient();
+  const article = await getArticleBySlug(supabase, site.id, params.slug);
+  if (!article) return {};
+  const baseUrl = site.domain ? `https://${site.domain}` : '';
+  return {
+    title: `${article.seo_title ?? article.title} — ${site.seo_config.title}`,
+    description: article.seo_description ?? article.excerpt ?? site.seo_config.description,
+    openGraph: {
+      title: article.seo_title ?? article.title,
+      description: article.seo_description ?? article.excerpt ?? site.seo_config.description,
+      url: `${baseUrl}/articles/${article.slug}`,
+      ...(article.cover_image && { images: [{ url: article.cover_image }] }),
+    },
+  };
 }
 
 export default async function ArticlePage({ params }: Props) {
