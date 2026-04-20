@@ -20,7 +20,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const navLinks = [
     { label: '首頁', href: '/' },
     ...(mc?.articles?.enabled ? [{ label: '文章', href: '/articles' }] : []),
-    ...(mc?.news?.enabled ? [{ label: '最新消息', href: '/news' }] : []),
     ...(mc?.contact?.enabled ? [{ label: '聯絡我們', href: '/contact' }] : []),
   ];
 

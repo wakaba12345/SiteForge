@@ -40,17 +40,13 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
   - "magazine"：預設選項，適合大多數業種 → 第一篇大圖特顯，其餘三欄小卡
   - "grid"：適合圖片豐富、產品展示型
   - "list"：適合簡潔文字型
-- newsLayout:
-  - "card"：零售、餐飲、消息量多
-  - "list"：律師、醫療、顧問等專業服務
 
 內容規則（Landing Page 轉換導向，非傳統企業文章）：
 - hero title：直接說出最大利益或解決的核心問題，10 字以內，有衝擊力（例：「讓企業稅務不再是負擔」「3 個月讓業績翻倍」）
 - hero subtitle：對目標客戶說話，25 字左右，點出痛點或承諾（例：「我們服務超過 200 家中小企業，幫助他們節省 30% 營運成本」）
-- articles 生成 3-4 篇「知識庫文章」，是訪客會想深入閱讀的專業內容（例：行業指南、常見問題詳解、案例分析、實用教學），不是廣告文案。每篇 content 至少 400 字，善用 <h2><h3><p><ul><strong> 排版
+- articles 若需要文章系統則生成 3-4 篇「知識庫文章」，是訪客會想深入閱讀的專業內容（例：行業指南、常見問題詳解、案例分析、實用教學），不是廣告文案。每篇 content 至少 400 字，善用 <h2><h3><p><ul><strong> 排版。若不需要文章系統則 articles 輸出空陣列，並將 articlesEnabled 設為 false
 - features 生成 3-6 個「核心優勢/服務特色」項目（自包含卡片，直接顯示在首頁，不跳頁）：每個 item 有 title（8字以內，有力）和 description（50-70字，說明具體優勢或服務特色）
 - featuresTitle 生成 features 區塊的標題（例：「為什麼選擇我們」「我們的服務特色」「核心優勢」）
-- news 生成 4 則，內容建立可信度（例：「獲得 XX 認證」「服務突破 100 家客戶」「媒體報導」「限時優惠活動」）
 - marquee 生成 5 則跑馬燈公告，格式像真實新聞動態：受獎/受邀演講/媒體曝光/新服務上線/重要認證（例：「本所陳大明律師受邀擔任 2025 法務部企業法遵論壇講師」「榮獲 2024 台灣服務業金牌獎」「新增日文諮詢服務，即日起接受預約」「接受自由時報採訪報導，談中小企業常見法律風險」），語氣正式專業，不用廣告口吻
 - 所有文字繁體中文，貼近台灣用語，語氣親切有力，不用官腔
 
@@ -59,9 +55,9 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
 {
   "layout": {
     "heroLayout": "<centered|split|minimal>",
-    "articlesLayout": "<magazine|grid|list>",
-    "newsLayout": "<list|card>"
+    "articlesLayout": "<magazine|grid|list>"
   },
+  "articlesEnabled": true,
   "theme": {
     "colors": {
       "primary": "<深沉主色>",
@@ -105,9 +101,6 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
       "content": "<完整HTML，至少400字>"
     }
   ],
-  "news": [
-    { "title": "<消息標題>", "content": "<50-100字>" }
-  ],
   "marquee": ["<文字1>", "<文字2>", "<文字3>", "<文字4>", "<文字5>"]
 }`;
 
@@ -144,7 +137,6 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
       ok: true,
       summary: {
         articles: passedGenerated.articles?.length ?? 0,
-        news: passedGenerated.news?.length ?? 0,
         marquee: passedGenerated.marquee?.length ?? 0,
       },
     });
@@ -204,7 +196,7 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
     },
     articles: {
       ...(site.module_config as any).articles,
-      enabled: true,
+      enabled: generated.articlesEnabled !== false,
       layout: layoutConfig.articlesLayout ?? 'magazine',
       showExcerpt: true,
       showCover: false,
@@ -241,22 +233,7 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
     );
   }
 
-  // 4. News
-  await service.from('news').delete().eq('site_id', siteId);
-  if (generated.news?.length) {
-    await service.from('news').insert(
-      generated.news.map((n: any, i: number) => ({
-        site_id: siteId,
-        title: n.title,
-        content: n.content ?? null,
-        status: 'published',
-        published_at: new Date(Date.now() - i * 86400000).toISOString(),
-        sort_order: i,
-      }))
-    );
-  }
-
-  // 5. Marquee
+  // 4. Marquee
   await service.from('marquee_items').delete().eq('site_id', siteId);
   if (generated.marquee?.length) {
     await service.from('marquee_items').insert(
@@ -273,7 +250,7 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
       await fetch(`${siteUrl}/api/revalidate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-revalidation-secret': process.env.REVALIDATION_SECRET },
-        body: JSON.stringify({ paths: ['/', '/articles', '/news'] }),
+        body: JSON.stringify({ paths: ['/', '/articles'] }),
       });
     } catch { /* non-fatal */ }
   }

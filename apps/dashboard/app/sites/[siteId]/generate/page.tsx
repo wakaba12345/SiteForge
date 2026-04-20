@@ -7,14 +7,14 @@ interface Message { role: 'user' | 'assistant'; content: string; }
 type Tab = 'quickbuild' | 'chat';
 
 interface PreviewData {
-  layout?: { heroLayout?: string; articlesLayout?: string; newsLayout?: string };
+  layout?: { heroLayout?: string; articlesLayout?: string };
   theme: any;
   hero: any;
   featuresTitle?: string;
   features?: Array<{ title: string; description: string }>;
   articles: Array<{ title: string; category?: string; excerpt?: string }>;
-  news: Array<{ title: string }>;
   marquee: string[];
+  articlesEnabled?: boolean;
 }
 
 function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: string }) {
@@ -178,31 +178,6 @@ function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: 
         </div>
       )}
 
-      {/* News */}
-      {(preview.news?.length ?? 0) > 0 && (
-        <div style={{ background: 'var(--sf)', borderTop: '1px solid var(--bd)', padding: '14px 20px' }}>
-          <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>最新消息</div>
-          {l.newsLayout === 'card' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
-              {preview.news.slice(0, 3).map((n, i) => (
-                <div key={i} style={{ background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: radius, padding: '8px 10px' }}>
-                  <div style={{ color: 'var(--tx)', fontWeight: 600, fontSize: 10, lineHeight: 1.4 }}>{n.title}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {preview.news.slice(0, 3).map((n, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 5, borderBottom: `1px solid var(--bd)` }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--a)', marginTop: 3, flexShrink: 0, display: 'block' }} />
-                  <span style={{ color: 'var(--tx)', fontSize: 10, lineHeight: 1.4 }}>{n.title}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Marquee strip */}
       {(preview.marquee?.length ?? 0) > 0 && (
         <div style={{ background: 'var(--p)', padding: '7px 20px', display: 'flex', gap: 20, overflow: 'hidden' }}>
@@ -256,7 +231,7 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
   const [building, setBuilding] = useState(false);
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [buildResult, setBuildResult] = useState<{ articles: number; news: number; marquee: number } | null>(null);
+  const [buildResult, setBuildResult] = useState<{ articles: number; marquee: number } | null>(null);
   const [buildError, setBuildError] = useState('');
   const [siteUrl, setSiteUrl] = useState('');
   const [siteName, setSiteName] = useState('');
@@ -494,10 +469,9 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
                     重新生成
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-2 gap-3 text-center">
                   {[
                     { label: '文章', value: buildResult.articles },
-                    { label: '最新消息', value: buildResult.news },
                     { label: '跑馬燈', value: buildResult.marquee },
                   ].map((s) => (
                     <div key={s.label} className="rounded-xl bg-white border border-green-100 py-3">
@@ -570,9 +544,9 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
           )}
 
           <div className="text-xs text-slate-500 bg-slate-50 rounded-xl p-4 space-y-1.5 leading-relaxed">
-            <p><strong className="text-slate-700">📝 套用內容：</strong>套用後文章、消息、跑馬燈立即更新，<strong>無需重新部署</strong>。</p>
+            <p><strong className="text-slate-700">📝 套用內容：</strong>套用後文章和跑馬燈立即更新，<strong>無需重新部署</strong>。</p>
             <p><strong className="text-slate-700">🚀 何時需要部署：</strong>只有在 Vercel 修改程式碼後才需要重新部署，平常套用內容不需要。</p>
-            <p><strong className="text-slate-700">⚠️ 注意：</strong>套用後會覆蓋現有文章、消息和跑馬燈內容。</p>
+            <p><strong className="text-slate-700">⚠️ 注意：</strong>套用後會覆蓋現有文章和跑馬燈內容。</p>
             <p><strong className="text-slate-700">🏷 文章分類：</strong>分類標籤是裝飾性標籤，目前不支援點擊篩選。</p>
           </div>
         </div>
