@@ -220,6 +220,34 @@ function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: 
   );
 }
 
+function MultiDevicePreview({ preview, siteName }: { preview: PreviewData; siteName: string }) {
+  const INNER_W = 520;
+  const devices = [
+    { label: '🖥 桌機', targetW: 360, targetH: 440 },
+    { label: '⬜ 平板', targetW: 220, targetH: 380 },
+    { label: '📱 手機', targetW: 130, targetH: 320 },
+  ];
+  return (
+    <div style={{ background: '#f1f5f9', borderRadius: 12, padding: '12px 14px 14px' }}>
+      <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
+        {devices.map(({ label, targetW, targetH }) => {
+          const scale = targetW / INNER_W;
+          return (
+            <div key={label} style={{ flexShrink: 0 }}>
+              <div style={{ textAlign: 'center', marginBottom: 6, fontSize: 10, fontWeight: 700, color: '#64748b', letterSpacing: '0.05em' }}>{label}</div>
+              <div style={{ width: targetW, height: targetH, overflow: 'hidden', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+                <div style={{ transform: `scale(${scale})`, transformOrigin: 'top left', width: INNER_W, pointerEvents: 'none' }}>
+                  <VisualPreview preview={preview} siteName={siteName} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function GeneratePage({ params }: { params: { siteId: string } }) {
   const [tab, setTab] = useState<Tab>('quickbuild');
 
@@ -421,8 +449,8 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
           {/* Preview card */}
           {preview && (
             <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-              {/* Visual preview */}
-              <VisualPreview preview={preview} siteName={siteName} />
+              {/* Multi-device visual preview */}
+              <MultiDevicePreview preview={preview} siteName={siteName} />
 
               {/* Action buttons */}
               <div className="flex gap-3 p-4 border-t border-slate-100 bg-slate-50">
@@ -481,6 +509,20 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
               </div>
 
               {siteUrl && (
+                <a
+                  href={siteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 flex items-center justify-center gap-2 w-full rounded-xl bg-slate-900 text-white py-3 text-sm font-semibold hover:bg-slate-700 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  查看線上網站
+                </a>
+              )}
+
+              {siteUrl && (
                 <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
                     <div className="flex items-center gap-2">
@@ -527,8 +569,11 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
             </div>
           )}
 
-          <div className="text-xs text-slate-400 bg-slate-50 rounded-xl p-4">
-            <strong className="text-slate-500">注意：</strong>套用後會覆蓋現有文章、消息和跑馬燈內容。
+          <div className="text-xs text-slate-500 bg-slate-50 rounded-xl p-4 space-y-1.5 leading-relaxed">
+            <p><strong className="text-slate-700">📝 套用內容：</strong>套用後文章、消息、跑馬燈立即更新，<strong>無需重新部署</strong>。</p>
+            <p><strong className="text-slate-700">🚀 何時需要部署：</strong>只有在 Vercel 修改程式碼後才需要重新部署，平常套用內容不需要。</p>
+            <p><strong className="text-slate-700">⚠️ 注意：</strong>套用後會覆蓋現有文章、消息和跑馬燈內容。</p>
+            <p><strong className="text-slate-700">🏷 文章分類：</strong>分類標籤是裝飾性標籤，目前不支援點擊篩選。</p>
           </div>
         </div>
       )}
