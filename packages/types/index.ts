@@ -14,7 +14,7 @@ export interface NewsConfig {
 
 export interface ArticlesConfig {
   enabled: boolean;
-  layout: 'grid' | 'list' | 'magazine';
+  layout: 'grid' | 'list' | 'magazine' | 'features';
   perPage: number;
   showExcerpt: boolean;
   showCover: boolean;

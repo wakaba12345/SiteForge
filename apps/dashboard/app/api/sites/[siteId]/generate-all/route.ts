@@ -37,9 +37,10 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
   - "split"：不動產、建築、企業服務 → 左文右色塊，商務感
   - "centered"：餐飲、零售、活動、一般消費品 → 漸層底色，親和力
 - articlesLayout:
-  - "magazine"：律師、診所、顧問、不動產（需突出第一篇「關於我們」）
-  - "grid"：科技、零售、教育、服務項目多的業種
-  - "list"：部落格、新聞、閱讀導向
+  - "features"：預設選項，適合絕大多數業種 → 顯示為 01/02/03 編號特色卡片，每張卡片有標題和說明，最適合「為什麼選擇我們」「服務優勢」「核心特色」等 Landing Page 區塊
+  - "magazine"：適合需要突出第一篇文章的業種（部落格、媒體、文章導向網站）→ 第一篇大圖特顯
+  - "grid"：適合有圖片、產品展示型網站
+  - "list"：適合簡潔文字列表型
 - newsLayout:
   - "card"：零售、餐飲、消息量多
   - "list"：律師、醫療、顧問等專業服務
@@ -64,7 +65,7 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
 {
   "layout": {
     "heroLayout": "<centered|split|minimal>",
-    "articlesLayout": "<grid|list|magazine>",
+    "articlesLayout": "<features|grid|list|magazine>",
     "newsLayout": "<list|card>"
   },
   "theme": {
@@ -102,7 +103,7 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
       "title": "<文章標題>",
       "slug": "<英文slug>",
       "category": "<分類>",
-      "excerpt": "<100字以內>",
+      "excerpt": "<60-80字，精煉有力，說明這篇文章對訪客的核心價值，適合直接顯示在卡片上>",
       "content": "<完整HTML，至少300字>"
     }
   ],
@@ -206,7 +207,9 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
     articles: {
       ...(site.module_config as any).articles,
       enabled: true,
-      layout: layoutConfig.articlesLayout ?? 'grid',
+      layout: layoutConfig.articlesLayout ?? 'features',
+      showExcerpt: true,
+      showCover: false,
     },
     news: {
       ...(site.module_config as any).news,

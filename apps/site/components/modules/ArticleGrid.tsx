@@ -88,6 +88,59 @@ export async function ArticleGrid({ siteId, config }: Props) {
     );
   }
 
+  // ── Features layout ──
+  if (config.layout === 'features') {
+    return (
+      <section className="py-20 px-6" style={{ background: 'var(--color-bg)' }}>
+        <div className="mx-auto" style={sectionStyle}>
+          <div className="text-center mb-14">
+            <div className="w-10 h-1 rounded-full mx-auto mb-5"
+              style={{ background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))' }} />
+            <h2 className="text-3xl font-bold" style={headingStyle}>我們的服務與優勢</h2>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {articles.map((article, i) => (
+              <a key={article.id} href={`/articles/${article.slug}`}
+                className="group flex flex-col p-7 rounded-xl border transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                style={{ ...cardStyle, background: 'var(--color-surface)' }}>
+                <div className="mb-5">
+                  <span
+                    className="block text-4xl font-black leading-none mb-2"
+                    style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-heading)', opacity: 0.7 }}
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="w-8 h-0.5" style={{ background: 'var(--color-accent)' }} />
+                </div>
+                {article.category && (
+                  <span className="text-xs font-semibold uppercase tracking-wider mb-2"
+                    style={{ color: 'var(--color-accent)' }}>{article.category}</span>
+                )}
+                <h3 className="font-bold text-lg mb-3 leading-snug"
+                  style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}>
+                  {article.title}
+                </h3>
+                {config.showExcerpt && article.excerpt && (
+                  <p className="text-sm leading-relaxed flex-1 line-clamp-4"
+                    style={{ color: 'var(--color-text-secondary)' }}>
+                    {article.excerpt}
+                  </p>
+                )}
+                <div className="mt-5 flex items-center gap-1 text-sm font-semibold transition-colors"
+                  style={{ color: 'var(--color-primary)' }}>
+                  <span>了解更多</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   // ── List layout ──
   if (config.layout === 'list') {
     return (
