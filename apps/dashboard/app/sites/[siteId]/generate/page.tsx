@@ -67,40 +67,38 @@ function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: 
         </div>
       </div>
 
-      {/* Hero — minimal */}
-      {l.heroLayout === 'minimal' && (
-        <div style={{ background: 'var(--sf)', borderBottom: '1px solid var(--bd)', padding: '28px 24px', textAlign: 'center' }}>
-          <div style={{ width: 24, height: 3, background: 'var(--a)', margin: '0 auto 10px', borderRadius: 99 }} />
-          <div style={{ color: 'var(--p)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 20, marginBottom: 6, lineHeight: 1.3 }}>{preview.hero?.title}</div>
-          <div style={{ color: 'var(--ts)', fontSize: 11, marginBottom: 12, maxWidth: 360, margin: '0 auto 12px' }}>{preview.hero?.subtitle}</div>
-          <div style={{ display: 'inline-block', border: `2px solid var(--p)`, color: 'var(--p)', padding: '4px 14px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
-        </div>
-      )}
-
-      {/* Hero — split */}
-      {l.heroLayout === 'split' && (
-        <div style={{ display: 'flex', minHeight: 120 }}>
-          <div style={{ flex: 1, background: 'var(--bg)', padding: '24px 28px' }}>
-            <div style={{ width: 20, height: 3, background: 'var(--a)', marginBottom: 8, borderRadius: 99 }} />
-            <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 17, marginBottom: 6, lineHeight: 1.3 }}>{preview.hero?.title}</div>
-            <div style={{ color: 'var(--ts)', fontSize: 10, marginBottom: 10 }}>{preview.hero?.subtitle}</div>
-            <div style={{ display: 'inline-block', background: 'var(--p)', color: '#fff', padding: '4px 12px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
-          </div>
-          <div style={{ width: '38%', background: `linear-gradient(145deg, ${c.primary ?? '#1a2f4a'}, ${c.accent ?? '#b8973a'})`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ color: '#fff', fontFamily: 'var(--hf)', fontWeight: 900, fontSize: 36, opacity: 0.15, lineHeight: 1 }}>{preview.hero?.title?.slice(0, 2)}</div>
+      {/* HeroNewsSection — combined left/right layout (matches actual site) */}
+      <div style={{ background: 'var(--sf)', borderBottom: '1px solid var(--bd)', display: 'flex', minHeight: 160 }}>
+        {/* Left: Hero */}
+        <div style={{ flex: 1, padding: '20px 22px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ width: 20, height: 3, background: 'var(--a)', borderRadius: 99, marginBottom: 8 }} />
+          <div style={{ color: 'var(--p)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 16, marginBottom: 5, lineHeight: 1.35 }}>{preview.hero?.title}</div>
+          <div style={{ color: 'var(--ts)', fontSize: 9, marginBottom: 10, lineHeight: 1.5 }}>{preview.hero?.subtitle}</div>
+          <div style={{ display: 'flex', gap: 5 }}>
+            <div style={{ background: 'var(--p)', color: '#fff', padding: '4px 11px', borderRadius: radius, fontSize: 9, fontWeight: 700 }}>{preview.hero?.ctaText}</div>
+            <div style={{ border: `1.5px solid var(--p)`, color: 'var(--p)', padding: '3px 11px', borderRadius: radius, fontSize: 9, fontWeight: 700 }}>免費諮詢</div>
           </div>
         </div>
-      )}
-
-      {/* Hero — centered (gradient) */}
-      {(l.heroLayout === 'centered' || !l.heroLayout) && (
-        <div style={{ background: `linear-gradient(135deg, ${c.primary ?? '#1a2f4a'}, ${c.accent ?? '#b8973a'})`, padding: '28px 24px', textAlign: 'center' }}>
-          <div style={{ width: 24, height: 3, background: 'rgba(255,255,255,0.5)', margin: '0 auto 10px', borderRadius: 99 }} />
-          <div style={{ color: '#fff', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 20, marginBottom: 6 }}>{preview.hero?.title}</div>
-          <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, marginBottom: 12 }}>{preview.hero?.subtitle}</div>
-          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', padding: '4px 14px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
-        </div>
-      )}
+        {/* Right: News sidebar */}
+        {(preview.news?.length ?? 0) > 0 && (
+          <div style={{ width: 140, borderLeft: '1px solid var(--bd)', padding: '14px 11px', background: 'var(--bg)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7, paddingBottom: 5, borderBottom: `1.5px solid var(--p)` }}>
+              <span style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 9 }}>最新消息</span>
+              <span style={{ color: 'var(--a)', fontSize: 8, fontWeight: 600 }}>更多 →</span>
+            </div>
+            {preview.news.slice(0, 4).map((n, i) => (
+              <div key={i} style={{ padding: '4px 0', borderBottom: i < Math.min(preview.news.length, 4) - 1 ? `1px solid var(--bd)` : 'none' }}>
+                <div style={{ color: 'var(--a)', fontSize: 7, fontWeight: 600, marginBottom: 1 }}>
+                  {new Date(Date.now() - i * 86400000).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+                </div>
+                <div style={{ color: 'var(--tx)', fontSize: 9, lineHeight: 1.4, fontWeight: 500 }}>
+                  {n.title.length > 18 ? n.title.slice(0, 18) + '…' : n.title}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Features */}
       {(preview.features?.length ?? 0) > 0 && (
@@ -210,30 +208,6 @@ function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: 
         </div>
       )}
 
-      {/* News */}
-      {(preview.news?.length ?? 0) > 0 && (
-        <div style={{ background: 'var(--sf)', borderTop: '1px solid var(--bd)', padding: '14px 20px' }}>
-          <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 13, marginBottom: 8 }}>最新消息</div>
-          {l.newsLayout === 'card' ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6 }}>
-              {preview.news.slice(0, 3).map((n, i) => (
-                <div key={i} style={{ background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: radius, padding: '8px 10px' }}>
-                  <div style={{ color: 'var(--tx)', fontWeight: 600, fontSize: 10, lineHeight: 1.4 }}>{n.title}</div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {preview.news.slice(0, 3).map((n, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingBottom: 5, borderBottom: `1px solid var(--bd)` }}>
-                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--a)', marginTop: 3, flexShrink: 0, display: 'block' }} />
-                  <span style={{ color: 'var(--tx)', fontSize: 10, lineHeight: 1.4 }}>{n.title}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* CTA */}
       {preview.ctaTitle && (

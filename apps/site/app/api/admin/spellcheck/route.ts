@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
       content: `請校對以下繁體中文文章，找出錯別字、漏字、語法問題。只輸出 JSON，不要有其他文字。
 
 若無錯誤，輸出：{"errors":[],"message":"未發現明顯錯誤"}
-若有錯誤，輸出：{"errors":[{"wrong":"錯誤文字","correct":"正確文字","reason":"說明"}],"message":"發現 N 處問題"}
+若有錯誤，輸出：{"errors":[{"context":"錯字前後約 15-25 字的完整句子原文","wrong":"錯誤文字","correct":"正確文字","reason":"簡短說明"}],"message":"發現 N 處問題"}
+
+注意：context 必須從原文一字不差摘錄（包含標點），長度 15-25 字，讓使用者能在上下文中看到錯字。
 
 標題：${title}
 內文：${(content || '').slice(0, 3000)}`,
