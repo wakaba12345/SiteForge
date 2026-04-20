@@ -147,7 +147,7 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
   const client = new Anthropic();
   const msg = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 8000,
+    max_tokens: 16000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: `網站名稱：${site.name}\n\n描述：${prompt}` }],
   });
