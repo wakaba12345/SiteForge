@@ -37,10 +37,9 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
   - "split"：不動產、建築、企業服務 → 左文右色塊，商務感
   - "centered"：餐飲、零售、活動、一般消費品 → 漸層底色，親和力
 - articlesLayout:
-  - "features"：預設選項，適合絕大多數業種 → 顯示為 01/02/03 編號特色卡片，每張卡片有標題和說明，最適合「為什麼選擇我們」「服務優勢」「核心特色」等 Landing Page 區塊
-  - "magazine"：適合需要突出第一篇文章的業種（部落格、媒體、文章導向網站）→ 第一篇大圖特顯
-  - "grid"：適合有圖片、產品展示型網站
-  - "list"：適合簡潔文字列表型
+  - "magazine"：預設選項，適合大多數業種 → 第一篇大圖特顯，其餘三欄小卡
+  - "grid"：適合圖片豐富、產品展示型
+  - "list"：適合簡潔文字型
 - newsLayout:
   - "card"：零售、餐飲、消息量多
   - "list"：律師、醫療、顧問等專業服務
@@ -48,14 +47,9 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
 內容規則（Landing Page 轉換導向，非傳統企業文章）：
 - hero title：直接說出最大利益或解決的核心問題，10 字以內，有衝擊力（例：「讓企業稅務不再是負擔」「3 個月讓業績翻倍」）
 - hero subtitle：對目標客戶說話，25 字左右，點出痛點或承諾（例：「我們服務超過 200 家中小企業，幫助他們節省 30% 營運成本」）
-- articles 生成 5-6 篇，採 Landing Page 敘事順序：
-  1. 痛點共鳴篇：標題如「你是否也面臨這些困境？」，用 <ul> 列出 5-6 個目標客戶的真實痛點，語氣有同理心，結尾引出解決方向
-  2. 解決方案篇：標題如「[業種] 的完整解決方案」，說明服務流程與方法，用 <h3> 分步驟，強調「我們不只是…，而是…」
-  3. 核心優勢篇：標題如「選擇我們的 3 個理由」或「我們與一般[業種]的差異」，每個優勢用 <h3> 標題 + 2-3 句說明，強調具體數字或成果
-  4. 客戶案例篇：標題如「真實客戶的改變」，虛構 2-3 個符合台灣情境的案例（含客戶背景、遭遇問題、合作後成果），成果要具體（「節省 40% 時間」「業績成長 2 倍」）
-  5. FAQ 篇：標題如「常見問題解答」，5-6 個真實客戶最常問的問題，每題詳細解答，消除疑慮
-  6.（選填）品牌故事篇：標題如「我們為什麼做這件事」，創辦人或團隊的使命感與專業背景，建立信任
-  - 每篇 content 至少 400 字，善用 <h2><h3><p><ul><strong> 排版，文字有感染力，避免空洞的企業八股話
+- articles 生成 3-4 篇「知識庫文章」，是訪客會想深入閱讀的專業內容（例：行業指南、常見問題詳解、案例分析、實用教學），不是廣告文案。每篇 content 至少 400 字，善用 <h2><h3><p><ul><strong> 排版
+- features 生成 3-6 個「核心優勢/服務特色」項目（自包含卡片，直接顯示在首頁，不跳頁）：每個 item 有 title（8字以內，有力）和 description（50-70字，說明具體優勢或服務特色）
+- featuresTitle 生成 features 區塊的標題（例：「為什麼選擇我們」「我們的服務特色」「核心優勢」）
 - news 生成 4 則，內容建立可信度（例：「獲得 XX 認證」「服務突破 100 家客戶」「媒體報導」「限時優惠活動」）
 - marquee 生成 5 則社會證明或優勢宣傳（例：「✓ 服務超過 200 家企業」「★ 客戶滿意度 98%」「免費諮詢 30 分鐘」）
 - 所有文字繁體中文，貼近台灣用語，語氣親切有力，不用官腔
@@ -65,7 +59,7 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
 {
   "layout": {
     "heroLayout": "<centered|split|minimal>",
-    "articlesLayout": "<features|grid|list|magazine>",
+    "articlesLayout": "<magazine|grid|list>",
     "newsLayout": "<list|card>"
   },
   "theme": {
@@ -98,13 +92,17 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師，熟悉台灣
     "ctaText": "<5 字以內>",
     "ctaUrl": "/contact"
   },
+  "featuresTitle": "<features 區塊標題>",
+  "features": [
+    { "title": "<8字以內>", "description": "<50-70字具體說明>" }
+  ],
   "articles": [
     {
-      "title": "<文章標題>",
+      "title": "<知識庫文章標題>",
       "slug": "<英文slug>",
       "category": "<分類>",
-      "excerpt": "<60-80字，精煉有力，說明這篇文章對訪客的核心價值，適合直接顯示在卡片上>",
-      "content": "<完整HTML，至少300字>"
+      "excerpt": "<80-100字摘要>",
+      "content": "<完整HTML，至少400字>"
     }
   ],
   "news": [
@@ -207,9 +205,14 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
     articles: {
       ...(site.module_config as any).articles,
       enabled: true,
-      layout: layoutConfig.articlesLayout ?? 'features',
+      layout: layoutConfig.articlesLayout ?? 'magazine',
       showExcerpt: true,
       showCover: false,
+    },
+    features: {
+      enabled: !!(generated.features?.length),
+      title: generated.featuresTitle ?? '為什麼選擇我們',
+      items: generated.features ?? [],
     },
     news: {
       ...(site.module_config as any).news,

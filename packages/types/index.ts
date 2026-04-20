@@ -4,6 +4,17 @@ export interface MarqueeConfig {
   items: string[];
 }
 
+export interface FeatureItem {
+  title: string;
+  description: string;
+}
+
+export interface FeaturesConfig {
+  enabled: boolean;
+  title: string;
+  items: FeatureItem[];
+}
+
 export interface NewsConfig {
   enabled: boolean;
   count: number;
@@ -72,6 +83,7 @@ export interface ModuleConfig {
   contact: ContactConfig;
   footer: FooterConfig;
   social: SocialConfig;
+  features?: FeaturesConfig;
 }
 
 export interface ThemeColors {

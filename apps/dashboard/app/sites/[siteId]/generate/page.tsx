@@ -10,7 +10,9 @@ interface PreviewData {
   layout?: { heroLayout?: string; articlesLayout?: string; newsLayout?: string };
   theme: any;
   hero: any;
-  articles: Array<{ title: string; category?: string }>;
+  featuresTitle?: string;
+  features?: Array<{ title: string; description: string }>;
+  articles: Array<{ title: string; category?: string; excerpt?: string }>;
   news: Array<{ title: string }>;
   marquee: string[];
 }
@@ -91,6 +93,29 @@ function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: 
           <div style={{ color: '#fff', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 20, marginBottom: 6 }}>{preview.hero?.title}</div>
           <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, marginBottom: 12 }}>{preview.hero?.subtitle}</div>
           <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', padding: '4px 14px', borderRadius: radius, fontSize: 10, fontWeight: 600 }}>{preview.hero?.ctaText}</div>
+        </div>
+      )}
+
+      {/* Features */}
+      {(preview.features?.length ?? 0) > 0 && (
+        <div style={{ background: 'var(--sf)', borderTop: '1px solid var(--bd)', padding: '20px 20px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ width: 24, height: 3, background: `linear-gradient(90deg, var(--p), var(--a))`, margin: '0 auto 8px', borderRadius: 99 }} />
+            <div style={{ color: 'var(--tx)', fontFamily: 'var(--hf)', fontWeight: 700, fontSize: 14 }}>
+              {preview.featuresTitle || '為什麼選擇我們'}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(preview.features!.length, 3)}, 1fr)`, gap: 8 }}>
+            {preview.features!.slice(0, 3).map((f, i) => (
+              <div key={i} style={{ background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: radius, padding: 10 }}>
+                <div style={{ color: 'var(--a)', fontWeight: 900, fontSize: 16, opacity: 0.7, marginBottom: 4, fontFamily: 'var(--hf)' }}>
+                  {String(i + 1).padStart(2, '0')}
+                </div>
+                <div style={{ color: 'var(--tx)', fontWeight: 700, fontSize: 11, marginBottom: 4 }}>{f.title}</div>
+                <div style={{ color: 'var(--ts)', fontSize: 10, lineHeight: 1.5 }}>{f.description}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
