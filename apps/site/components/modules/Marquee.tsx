@@ -39,12 +39,6 @@ export async function Marquee({ siteId, config }: Props) {
           </span>
         ))}
       </div>
-      <style>{`
-        @keyframes marquee-scroll {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-      `}</style>
     </div>
   );
 }
