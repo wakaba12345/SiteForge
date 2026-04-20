@@ -4,13 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
-const STARTER_PROMPTS = [
-  '幫我生成「為什麼選擇我們」的文章內容',
-  '幫我寫3則最新消息',
-  '生成跑馬燈滾動文字（5則）',
-  '幫我寫 Hero 區塊的標題和副標題',
-];
-
 type Tab = 'quickbuild' | 'chat';
 
 interface PreviewData {
@@ -276,28 +269,65 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
   const [input, setInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [interviewStarted, setInterviewStarted] = useState(false);
+  const [readyToGenerate, setReadyToGenerate] = useState(false);
+  const [interviewBuildPrompt, setInterviewBuildPrompt] = useState('');
 
-  async function sendChat(text?: string) {
+  async function sendInterview(text?: string) {
     const content = (text ?? input).trim();
-    if (!content || chatLoading) return;
-    const next: Message[] = [...messages, { role: 'user', content }];
-    setMessages(next);
+    // First call (auto-start): empty content is ok
+    if (!content && interviewStarted) return;
+    if (chatLoading) return;
+
+    const userMsg: Message = { role: 'user', content: content || '開始' };
+    const next: Message[] = content ? [...messages, userMsg] : [];
+    if (content) setMessages(next);
     setInput('');
     setChatLoading(true);
+    if (!interviewStarted) setInterviewStarted(true);
+
     try {
-      const res = await fetch('/api/content/generate', {
+      const res = await fetch('/api/content/interview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: next, siteId: params.siteId }),
+        body: JSON.stringify({ messages: next, siteName }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? '失敗');
-      setMessages((m) => [...m, { role: 'assistant', content: data.reply }]);
+      setMessages((m) => [...(content ? m : []), { role: 'assistant', content: data.reply }]);
+      if (data.readyToGenerate) {
+        setReadyToGenerate(true);
+        setInterviewBuildPrompt(data.buildPrompt ?? '');
+      }
     } catch (e) {
       setMessages((m) => [...m, { role: 'assistant', content: `錯誤：${e instanceof Error ? e.message : '請稍後再試'}` }]);
     } finally {
       setChatLoading(false);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    }
+  }
+
+  async function handleInterviewGenerate() {
+    if (!interviewBuildPrompt || building) return;
+    setBuildPrompt(interviewBuildPrompt);
+    setBuilding(true);
+    setPreview(null);
+    setBuildResult(null);
+    setBuildError('');
+    try {
+      const res = await fetch(`/api/sites/${params.siteId}/generate-all`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: interviewBuildPrompt, mode: 'preview' }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? '生成失敗');
+      setPreview(data.preview);
+      setTab('quickbuild'); // switch to quickbuild tab to show visual preview
+    } catch (e) {
+      setBuildError(e instanceof Error ? e.message : '生成失敗，請再試一次');
+    } finally {
+      setBuilding(false);
     }
   }
 
@@ -481,40 +511,8 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
       {/* AI 對話 */}
       {tab === 'chat' && (
         <div className="flex flex-col flex-1" style={{ minHeight: 400 }}>
-          <div className="flex-1 overflow-y-auto flex flex-col gap-4 pb-4 min-h-0" style={{ minHeight: 300 }}>
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center flex-1 text-center py-12">
-                <p className="text-sm font-medium text-slate-700 mb-1">針對特定區塊追加或修改內容</p>
-                <p className="text-xs text-slate-400 mb-6">一鍵建站後，用對話微調個別區塊</p>
-                <div className="grid grid-cols-2 gap-2 w-full max-w-md">
-                  {STARTER_PROMPTS.map((p) => (
-                    <button key={p} onClick={() => sendChat(p)}
-                      className="text-xs text-left px-3 py-2 bg-white border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors text-slate-600">
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`relative group max-w-[85%] rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap ${
-                    msg.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-sm'
-                      : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'
-                  }`}>
-                    {msg.content}
-                    {msg.role === 'assistant' && (
-                      <button onClick={() => navigator.clipboard.writeText(msg.content)}
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-slate-400 hover:text-slate-600 bg-white border border-slate-200 rounded px-1.5 py-0.5">
-                        複製
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-            {chatLoading && (
+          <div className="flex-1 overflow-y-auto flex flex-col gap-3 pb-4 min-h-0" style={{ minHeight: 300 }}>
+            {messages.length === 0 && chatLoading && (
               <div className="flex justify-start">
                 <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3">
                   <div className="flex gap-1 items-center h-4">
@@ -525,33 +523,124 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
                 </div>
               </div>
             )}
+
+            {messages.length === 0 && !chatLoading && !interviewStarted && (
+              <div className="flex flex-col items-center justify-center flex-1 text-center py-12">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                  <span className="text-blue-600 text-xl">💬</span>
+                </div>
+                <p className="text-sm font-medium text-slate-700 mb-1">AI 顧問問答建站</p>
+                <p className="text-xs text-slate-400 mb-6 max-w-xs">AI 會透過 6-8 個問題了解你的需求，再一鍵生成完整網站</p>
+                <button
+                  onClick={() => sendInterview()}
+                  className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700"
+                >
+                  開始諮詢
+                </button>
+              </div>
+            )}
+
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {msg.role === 'assistant' && (
+                  <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 mr-2">AI</div>
+                )}
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                  msg.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-br-sm'
+                    : 'bg-white border border-slate-200 text-slate-800 rounded-bl-sm'
+                }`}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+
+            {chatLoading && messages.length > 0 && (
+              <div className="flex justify-start">
+                <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0 mt-1 mr-2">AI</div>
+                <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-sm px-4 py-3">
+                  <div className="flex gap-1 items-center h-4">
+                    {[0, 150, 300].map((d) => (
+                      <span key={d} className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {readyToGenerate && !chatLoading && (
+              <div className="flex justify-center mt-2">
+                <button
+                  onClick={handleInterviewGenerate}
+                  disabled={building}
+                  className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-md"
+                >
+                  {building ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                      AI 生成中，約需 30-60 秒…
+                    </>
+                  ) : (
+                    <>✦ 立即生成網站</>
+                  )}
+                </button>
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
 
-          <div className="border-t border-slate-200 pt-4">
-            <div className="flex gap-2 items-end bg-white border border-slate-200 rounded-2xl px-4 py-3 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); } }}
-                placeholder="描述你想要的內容…（Enter 送出）"
-                rows={1}
-                style={{ resize: 'none', maxHeight: 120 }}
-                className="flex-1 text-sm text-slate-800 placeholder-slate-400 focus:outline-none overflow-auto"
-                onInput={(e) => {
-                  const el = e.currentTarget;
-                  el.style.height = 'auto';
-                  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+          {!readyToGenerate && (
+            <div className="border-t border-slate-200 pt-4">
+              <div className="flex gap-2 items-end bg-white border border-slate-200 rounded-2xl px-4 py-3 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendInterview(); } }}
+                  placeholder="輸入你的回答…（Enter 送出）"
+                  rows={1}
+                  style={{ resize: 'none', maxHeight: 120 }}
+                  className="flex-1 text-sm text-slate-800 placeholder-slate-400 focus:outline-none overflow-auto"
+                  onInput={(e) => {
+                    const el = e.currentTarget;
+                    el.style.height = 'auto';
+                    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+                  }}
+                />
+                <button
+                  onClick={() => sendInterview()}
+                  disabled={!input.trim() || chatLoading}
+                  className="shrink-0 w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+              {messages.length > 0 && (
+                <p className="text-xs text-slate-400 mt-2 text-center">AI 顧問會逐步詢問建站需求，回答完畢後自動生成網站</p>
+              )}
+            </div>
+          )}
+
+          {readyToGenerate && (
+            <div className="border-t border-slate-100 pt-3 text-center">
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setInterviewStarted(false);
+                  setReadyToGenerate(false);
+                  setInterviewBuildPrompt('');
                 }}
-              />
-              <button onClick={() => sendChat()} disabled={!input.trim() || chatLoading}
-                className="shrink-0 w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                className="text-xs text-slate-400 hover:text-slate-600"
+              >
+                重新開始訪談
               </button>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
