@@ -25,13 +25,13 @@ export function Header({ siteName, links }: Props) {
         </a>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-6" style={{ alignItems: 'center', gap: '1.5rem' }}>
           {links.map((l) => (
             <a
               key={l.href}
               href={l.href}
               className="text-sm font-medium transition-colors hover:opacity-70"
-              style={{ color: 'var(--color-text)' }}
+              style={{ color: 'var(--color-text)', fontSize: '0.875rem', fontWeight: 500 }}
             >
               {l.label}
             </a>

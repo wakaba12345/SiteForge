@@ -21,11 +21,11 @@ export async function Marquee({ siteId, config }: Props) {
   return (
     <div
       className="overflow-hidden py-2 text-sm font-medium"
-      style={{ background: 'var(--color-primary)', color: '#fff' }}
+      style={{ background: 'var(--color-primary)', color: '#fff', overflow: 'hidden' }}
     >
       <div
         className="flex whitespace-nowrap"
-        style={{ animation: `marquee-scroll ${duration} linear infinite` }}
+        style={{ display: 'flex', whiteSpace: 'nowrap', animation: `marquee-scroll ${duration} linear infinite` }}
       >
         {repeated.map((item, i) => (
           <span key={i} className="mx-8">

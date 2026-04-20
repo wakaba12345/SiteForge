@@ -190,11 +190,11 @@ export async function ArticleGrid({ siteId, config }: Props) {
     <section className="py-12 px-6">
       <div className="mx-auto" style={sectionStyle}>
         <h2 className="text-2xl font-bold mb-6" style={headingStyle}>文章</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {articles.map((article) => (
             <a key={article.id} href={`/articles/${article.slug}`}
               className="group block rounded-xl overflow-hidden border transition-shadow hover:shadow-md"
-              style={cardStyle}>
+              style={{ ...cardStyle, display: 'block', overflow: 'hidden' }}>
               {config.showCover && article.cover_image && (
                 <div className="relative aspect-video w-full overflow-hidden">
                   <Image src={article.cover_image} alt={article.title} fill

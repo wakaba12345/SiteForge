@@ -16,13 +16,13 @@ interface Props {
 export function ModuleRenderer({ config, siteId }: Props) {
   return (
     <>
-      {config.marquee.enabled && <Marquee siteId={siteId} config={config.marquee} />}
-      {config.hero.enabled && <Hero config={config.hero} />}
-      {config.features?.enabled && <FeaturesSection config={config.features} />}
-      {config.news.enabled && <NewsFeed siteId={siteId} config={config.news} />}
-      {config.articles.enabled && <ArticleGrid siteId={siteId} config={config.articles} />}
-      {config.contact.enabled && <ContactForm siteId={siteId} config={config.contact} />}
-      {config.footer.enabled && <Footer config={config.footer} />}
+      {config.marquee?.enabled && <Marquee siteId={siteId} config={config.marquee} />}
+      {config.hero?.enabled && <Hero config={config.hero} />}
+      {config.features?.enabled && <FeaturesSection config={config.features!} />}
+      {config.news?.enabled && <NewsFeed siteId={siteId} config={config.news} />}
+      {config.articles?.enabled && <ArticleGrid siteId={siteId} config={config.articles} />}
+      {config.contact?.enabled && <ContactForm siteId={siteId} config={config.contact} />}
+      {config.footer?.enabled && <Footer config={config.footer} />}
       {config.social?.enabled && <SocialLinks config={config.social} />}
     </>
   );

@@ -21,7 +21,7 @@ function HeroCentered({ config }: Props) {
 
   if (hasImage) {
     return (
-      <section className="relative flex items-center justify-center min-h-[520px] px-6 py-24 text-center overflow-hidden">
+      <section className="relative flex items-center justify-center min-h-[520px] px-6 py-24 text-center overflow-hidden" style={{ minHeight: '520px', overflow: 'hidden', position: 'relative' }}>
         <Image
           src={config.backgroundUrl!}
           alt=""
@@ -56,7 +56,7 @@ function HeroCentered({ config }: Props) {
   return (
     <section
       className="flex items-center justify-center min-h-[480px] px-6 py-24 text-center"
-      style={{ background: 'var(--color-bg)' }}
+      style={{ background: 'var(--color-bg)', minHeight: '480px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       <div className="max-w-2xl mx-auto">
         {/* Accent line */}
@@ -81,9 +81,9 @@ function HeroCentered({ config }: Props) {
 
 function HeroSplit({ config }: Props) {
   return (
-    <section className="flex min-h-[500px]" style={{ background: 'var(--color-bg)' }}>
+    <section className="flex min-h-[500px]" style={{ background: 'var(--color-bg)', display: 'flex', minHeight: '500px' }}>
       {/* Left: text */}
-      <div className="flex-1 flex items-center px-8 md:px-16 py-16">
+      <div className="flex-1 flex items-center px-8 md:px-16 py-16" style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '4rem 4rem' }}>
         <div className="max-w-lg">
           <div className="w-10 h-1 rounded-full mb-6"
             style={{ background: 'linear-gradient(90deg, var(--color-primary), var(--color-accent))' }} />
@@ -102,7 +102,7 @@ function HeroSplit({ config }: Props) {
       {/* Right: decorative block */}
       <div
         className="hidden md:flex w-[42%] items-center justify-center relative overflow-hidden"
-        style={{ background: 'linear-gradient(145deg, var(--color-primary), var(--color-accent))' }}
+        style={{ background: 'linear-gradient(145deg, var(--color-primary), var(--color-accent))', width: '42%', overflow: 'hidden', position: 'relative' }}
       >
         <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full opacity-10" style={{ background: '#fff' }} />
         <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full opacity-10" style={{ background: '#fff' }} />
@@ -121,7 +121,7 @@ function HeroMinimal({ config }: Props) {
   return (
     <section
       className="flex items-center justify-center min-h-[440px] px-6 py-24 text-center"
-      style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}
+      style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', minHeight: '440px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6rem 1.5rem', textAlign: 'center' }}
     >
       <div className="max-w-2xl mx-auto">
         <div className="w-10 h-1 rounded-full mx-auto mb-6"
