@@ -1,8 +1,9 @@
+import { cache } from 'react';
 import { headers } from 'next/headers';
 import { supabase } from './supabase';
 import type { Site } from '@siteforge/types';
 
-export async function getSiteConfig(): Promise<Site> {
+export const getSiteConfig = cache(async function getSiteConfig(): Promise<Site> {
   const host = headers().get('host') ?? '';
 
   let { data: site } = await supabase
@@ -28,4 +29,4 @@ export async function getSiteConfig(): Promise<Site> {
 
   if (!site) throw new Error('Site not found or inactive');
   return site as Site;
-}
+});

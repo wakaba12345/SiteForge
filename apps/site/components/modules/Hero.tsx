@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { HeroConfig } from '@siteforge/types';
 
 interface Props { config: HeroConfig; }
@@ -20,10 +21,15 @@ function HeroCentered({ config }: Props) {
 
   if (hasImage) {
     return (
-      <section
-        className="relative flex items-center justify-center min-h-[520px] px-6 py-24 text-center"
-        style={{ backgroundImage: `url(${config.backgroundUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-      >
+      <section className="relative flex items-center justify-center min-h-[520px] px-6 py-24 text-center overflow-hidden">
+        <Image
+          src={config.backgroundUrl!}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
         <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.52)' }} />
         <div className="relative z-10 max-w-2xl mx-auto">
           {config.title && (

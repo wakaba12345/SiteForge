@@ -32,6 +32,7 @@ export async function ArticleGrid({ siteId, config }: Props) {
             {config.showCover && featured.cover_image && (
               <div className="relative md:w-1/2 aspect-video md:aspect-auto overflow-hidden">
                 <Image src={featured.cover_image} alt={featured.title} fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover group-hover:scale-105 transition-transform duration-300" />
               </div>
             )}
@@ -64,6 +65,7 @@ export async function ArticleGrid({ siteId, config }: Props) {
                 {config.showCover && article.cover_image && (
                   <div className="relative aspect-video w-full overflow-hidden">
                     <Image src={article.cover_image} alt={article.title} fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 )}
@@ -154,7 +156,7 @@ export async function ArticleGrid({ siteId, config }: Props) {
                 style={cardStyle}>
                 {config.showCover && article.cover_image && (
                   <div className="relative w-32 h-24 shrink-0 overflow-hidden rounded-lg">
-                    <Image src={article.cover_image} alt={article.title} fill className="object-cover" />
+                    <Image src={article.cover_image} alt={article.title} fill sizes="128px" className="object-cover" />
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
@@ -196,6 +198,7 @@ export async function ArticleGrid({ siteId, config }: Props) {
               {config.showCover && article.cover_image && (
                 <div className="relative aspect-video w-full overflow-hidden">
                   <Image src={article.cover_image} alt={article.title} fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
               )}
