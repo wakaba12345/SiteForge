@@ -1,13 +1,13 @@
 import type { Section } from '@siteforge/types';
 import { BLOCKS } from './blocks';
 
-export function PageRenderer({ sections }: { sections: Section[] }) {
+export function PageRenderer({ sections, siteId }: { sections: Section[]; siteId: string }) {
   return (
     <>
       {sections.map((section, i) => {
         const Block = BLOCKS[section.type];
         if (!Block) return null;
-        return <Block key={i} config={section.config} />;
+        return <Block key={i} config={section.config} siteId={siteId} />;
       })}
     </>
   );

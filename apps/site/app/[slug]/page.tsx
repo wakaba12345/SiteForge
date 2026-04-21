@@ -43,5 +43,5 @@ export default async function DynamicPage({ params }: { params: { slug: string }
   const site = await getSiteConfig();
   const page = await fetchPage(site.id, params.slug);
   if (!page) notFound();
-  return <PageRenderer sections={page.sections} />;
+  return <PageRenderer sections={page.sections} siteId={site.id} />;
 }

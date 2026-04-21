@@ -282,11 +282,138 @@ export interface CtaBlockConfig {
   buttonUrl: string;
 }
 
+export interface ContactFormBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  fields?: Array<'name' | 'email' | 'phone' | 'company' | 'message'>;
+  successMessage?: string;
+  submitText?: string;
+}
+
+export interface TeamMember {
+  name: string;
+  title: string;
+  bio?: string;
+  photoUrl?: string;
+}
+
+export interface TeamGridConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  members: TeamMember[];
+  columns?: 2 | 3 | 4;
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface FaqBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  items: FaqItem[];
+}
+
+export interface GalleryImage {
+  url: string;
+  alt?: string;
+  caption?: string;
+}
+
+export interface GalleryBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  images: GalleryImage[];
+  columns?: 2 | 3 | 4;
+}
+
+export interface CaseItem {
+  title: string;
+  client?: string;
+  description: string;
+  results?: string;
+  tags?: string[];
+  imageUrl?: string;
+  url?: string;
+}
+
+export interface CasesGridConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  items: CaseItem[];
+  columns?: 2 | 3;
+}
+
+export interface StatItem {
+  value: string;
+  label: string;
+  suffix?: string;
+}
+
+export interface StatsBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  items: StatItem[];
+}
+
+export interface TestimonialItem {
+  quote: string;
+  author: string;
+  role?: string;
+  company?: string;
+  avatarUrl?: string;
+}
+
+export interface TestimonialsBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  items: TestimonialItem[];
+  columns?: 1 | 2 | 3;
+}
+
+export interface TwoColumnBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  body: string;
+  imageUrl?: string;
+  imagePosition?: 'left' | 'right';
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+export interface ProcessStepItemV2 {
+  title: string;
+  description: string;
+}
+
+export interface ProcessStepsBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  items: ProcessStepItemV2[];
+}
+
 export type Section =
   | { type: 'hero'; config: HeroBlockConfig }
   | { type: 'text'; config: TextBlockConfig }
   | { type: 'features_grid'; config: FeaturesGridConfig }
-  | { type: 'cta'; config: CtaBlockConfig };
+  | { type: 'cta'; config: CtaBlockConfig }
+  | { type: 'contact_form'; config: ContactFormBlockConfig }
+  | { type: 'team_grid'; config: TeamGridConfig }
+  | { type: 'faq'; config: FaqBlockConfig }
+  | { type: 'gallery'; config: GalleryBlockConfig }
+  | { type: 'cases_grid'; config: CasesGridConfig }
+  | { type: 'stats'; config: StatsBlockConfig }
+  | { type: 'testimonials'; config: TestimonialsBlockConfig }
+  | { type: 'two_column'; config: TwoColumnBlockConfig }
+  | { type: 'process_steps'; config: ProcessStepsBlockConfig };
 
 export interface PageSeo {
   title?: string;
