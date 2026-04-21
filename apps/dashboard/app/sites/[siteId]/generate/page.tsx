@@ -6,6 +6,14 @@ interface Message { role: 'user' | 'assistant'; content: string; }
 
 type Tab = 'quickbuild' | 'chat';
 
+interface StaticPagePreview {
+  slug: string;
+  title: string;
+  nav_label?: string;
+  seo?: { title?: string; description?: string };
+  sections: Array<{ type: string; config: any }>;
+}
+
 interface PreviewData {
   layout?: { heroLayout?: string; articlesLayout?: string; newsLayout?: string };
   theme: any;
@@ -21,7 +29,25 @@ interface PreviewData {
   news: Array<{ title: string }>;
   marquee: string[];
   articlesEnabled?: boolean;
+  pages?: StaticPagePreview[];
+  outOfScopeRequests?: string[];
 }
+
+const SECTION_LABEL: Record<string, string> = {
+  hero: 'Hero',
+  text: '文字段落',
+  features_grid: '優勢卡',
+  cta: 'CTA',
+  contact_form: '聯絡表單',
+  team_grid: '團隊',
+  faq: 'FAQ',
+  gallery: '圖庫',
+  cases_grid: '案例',
+  stats: '數據',
+  testimonials: '推薦',
+  two_column: '左右分欄',
+  process_steps: '流程',
+};
 
 function VisualPreview({ preview, siteName }: { preview: PreviewData; siteName: string }) {
   const c = preview.theme?.colors ?? {};
@@ -277,7 +303,7 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
   const [building, setBuilding] = useState(false);
   const [applying, setApplying] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [buildResult, setBuildResult] = useState<{ articles: number; news: number; marquee: number } | null>(null);
+  const [buildResult, setBuildResult] = useState<{ articles: number; news: number; marquee: number; pages: number } | null>(null);
   const [buildError, setBuildError] = useState('');
   const [siteUrl, setSiteUrl] = useState('');
   const [siteName, setSiteName] = useState('');
@@ -480,6 +506,68 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
               {/* Multi-device visual preview */}
               <MultiDevicePreview preview={preview} siteName={siteName} />
 
+              {/* Out of scope warnings */}
+              {(preview.outOfScopeRequests?.length ?? 0) > 0 && (
+                <div className="p-5 border-t border-amber-100 bg-amber-50">
+                  <div className="flex gap-3">
+                    <span className="text-amber-600 text-xl leading-none pt-0.5">⚠</span>
+                    <div className="flex-1 text-sm text-amber-900">
+                      <p className="font-semibold mb-1">以下需求超出靜態網站範圍</p>
+                      <p className="text-xs mb-2 text-amber-700">
+                        建議以獨立專案另外處理。靜態網站仍會正常生成，僅這些動態功能無法包含。
+                      </p>
+                      <ul className="flex flex-wrap gap-2 mt-2">
+                        {preview.outOfScopeRequests!.map((r, i) => (
+                          <li key={i} className="text-xs bg-white border border-amber-200 rounded-full px-3 py-1 text-amber-800 font-medium">
+                            {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Generated static pages list */}
+              {(preview.pages?.length ?? 0) > 0 && (
+                <div className="p-5 border-t border-slate-100 bg-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      AI 生成的靜態頁（{preview.pages!.length} 頁）
+                    </h3>
+                    <span className="text-xs text-slate-400">預覽後套用才會建立</span>
+                  </div>
+                  <div className="grid gap-2">
+                    {preview.pages!.map((p) => (
+                      <div
+                        key={p.slug}
+                        className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div>
+                            <span className="text-sm font-semibold text-slate-900">{p.title}</span>
+                            <span className="ml-2 text-xs font-mono text-slate-400">/{p.slug}</span>
+                          </div>
+                          <span className="text-xs text-slate-500">
+                            {p.sections?.length ?? 0} 個區塊
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {p.sections?.map((s, i) => (
+                            <span
+                              key={i}
+                              className="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600"
+                            >
+                              {SECTION_LABEL[s.type] ?? s.type}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Action buttons */}
               <div className="flex gap-3 p-4 border-t border-slate-100 bg-slate-50">
                 <button
@@ -522,8 +610,9 @@ export default function GeneratePage({ params }: { params: { siteId: string } })
                     重新生成
                   </button>
                 </div>
-                <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="grid grid-cols-4 gap-3 text-center">
                   {[
+                    { label: '靜態頁', value: buildResult.pages },
                     { label: '文章', value: buildResult.articles },
                     { label: '最新消息', value: buildResult.news },
                     { label: '跑馬燈', value: buildResult.marquee },

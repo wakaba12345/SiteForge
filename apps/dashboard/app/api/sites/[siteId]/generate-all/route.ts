@@ -93,6 +93,64 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師與文案策略
 - 5 則跑馬燈，真實新聞動態感：受邀演講/媒體採訪/認證/客戶里程碑
 - 語氣專業，帶有具體資訊
 
+## 靜態頁面系統（除首頁外，另生多個靜態頁讓 demo 看起來像完整網站）
+
+### 13 種可用區塊（sections 只能用這些類型，不可自創）
+- hero: {eyebrow?, title, subtitle?, ctaText?, ctaUrl?, align?:"left"|"center", backgroundUrl?}
+- text: {eyebrow?, heading?, body(HTML), align?:"left"|"center", narrow?:bool}
+- features_grid: {eyebrow?, heading?, intro?, items:[{title, description, icon?}], columns?:2|3|4}
+- cta: {title, description?, buttonText, buttonUrl}
+- contact_form: {eyebrow?, heading?, intro?, fields?:["name","email","phone","company","message"], submitText?, successMessage?}
+- team_grid: {eyebrow?, heading?, intro?, members:[{name, title, bio?, photoUrl?}], columns?:2|3|4}
+- faq: {eyebrow?, heading?, intro?, items:[{question, answer(HTML)}]}
+- gallery: {eyebrow?, heading?, intro?, images:[{url, alt?, caption?}], columns?:2|3|4}
+- cases_grid: {eyebrow?, heading?, intro?, items:[{title, client?, description, results?, tags?:[], imageUrl?}], columns?:2|3}
+- stats: {eyebrow?, heading?, items:[{value, label, suffix?}]}
+- testimonials: {eyebrow?, heading?, intro?, items:[{quote, author, role?, company?}], columns?:1|2|3}
+- two_column: {eyebrow?, heading?, body(HTML), imageUrl?, imagePosition?:"left"|"right", ctaText?, ctaUrl?}
+- process_steps: {eyebrow?, heading?, intro?, items:[{title, description}]}
+
+### 業種對應的標配頁面（每站至少 3 頁靜態頁）
+- 律師 / 醫療 / 顧問 / 會計 / 財務：about / services / contact
+- 科技 / 軟體 / 新創：about / features / cases / contact
+- 設計 / 創意 / 品牌：about / portfolio / contact
+- 餐飲 / 咖啡 / 文化：about / menu / contact
+- 不動產 / 建築：about / projects / contact
+- 教育 / 補習：about / courses / contact
+- 零售 / 電商 / 美妝：about / collections / contact
+- 其他服務：about / services / contact
+
+slug 用英文小寫，title 用繁中名稱（「關於我們」「服務項目」「作品集」「聯絡我們」「菜單」「課程」…）
+
+### 每頁建議區塊組合（至少 4 個區塊，看起來豐富完整）
+- about：hero + stats + text + two_column + team_grid + features_grid + testimonials + faq + cta（8-9 個，最豐富）
+- services：hero + process_steps + features_grid + cases_grid + cta（5 個）
+- contact：hero + contact_form（2 個，重點在表單，fields 依業種挑需要的）
+- portfolio / menu / collections / projects（圖片重）：hero + gallery + cases_grid + cta
+- features / cases / courses（資訊重）：hero + features_grid + process_steps + cases_grid + testimonials + cta
+
+### 內容品質要求（填滿、具體、可信，不要留空欄位）
+- team_grid：3-6 位成員。名字用台灣常見姓氏（陳林張王李黃吳周劉蔡楊許鄭謝洪郭曾高...），職稱具體（主持律師 / 合夥律師 / 資深會計師 / 產品設計總監 / 主廚 / 執行長），bio 40-60 字寫專長與背景。不要 photoUrl。
+- cases_grid：3-6 個案例。client 用產業類別（「TECH 產業」「金融業」「連鎖餐飲」「上市公司」「跨國集團」），不要編真實公司名。description 60-90 字寫挑戰與解方。results 一句話有具體數字（「三週完成」「節省 40% 成本」「勝訴率 92%」「月來客 +65%」）。tags 給 2-3 個業種/服務類別。imageUrl 用 Unsplash 連結（https://images.unsplash.com/photo-xxxxx?w=1200&q=80）找對應業種圖片。
+- testimonials：3 個。author 用「王先生 / 李總 / A 小姐 / 林醫師 / 張主任」，quote 80-120 字寫真實情境與感受。
+- faq：5-7 題客戶會問的（費用怎算、流程多久、保密嗎、外縣市接嗎、失敗怎辦、第一次要準備什麼、多久可見效…）。answer 用 HTML，可用 <p><ul><strong>。
+- stats：3-4 個。value 具體數字，suffix 用 "+" 或 "%" 或業種單位（"年"、"億"、"家"），label 對應（"年實務經驗"、"服務客戶"、"勝訴率"、"追回金額"）。
+- gallery：6 張圖。images 用 Unsplash（https://images.unsplash.com/photo-xxxxx?w=800&q=80），找業種對應風格（律師→辦公/會議空間、餐廳→食物/空間、設計→作品/工作室、零售→商品展示）。每張給 caption。
+- two_column：body 用 <p> 段落，imageUrl 用 Unsplash 找對應情境。imagePosition 交替使用讓版面不單調。
+- process_steps：3-5 步，步驟清楚簡潔。
+- hero（頁面用）：title 8-15 字點出該頁主題，subtitle 30-50 字說明這頁能幫客戶什麼。
+- eyebrow 一律用英文全大寫（ABOUT US / OUR TEAM / CLIENT VOICES / BY THE NUMBERS / GET IN TOUCH...），heading 用繁體中文。
+
+### 超出靜態網站範圍的需求（列進 outOfScopeRequests，但繼續生其他部分，不要拒絕）
+若客戶描述提到以下需求，條列出來提醒這些屬於動態功能需獨立專案：
+- 商品購物車、金流、線上購買 → "商品與金流系統"
+- 會員登入、註冊、個人中心 → "會員系統"
+- 線上預約、日曆、時段選擇 → "預約系統"
+- 訂單查詢、物流追蹤 → "訂單系統"
+- 留言板、評論、論壇 → "社群互動"
+- 多語系切換 → "國際化 i18n"
+- 後台資料報表、分析 → "後台儀表板"
+
 所有文字繁體中文，貼近台灣用語，語氣親切有力，不用官腔。
 
 重要：只輸出 JSON 物件，第一個字元是 {，最後一個字元是 }，不要有任何其他輸出。
@@ -115,7 +173,17 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師與文案策略
   "ctaButtonText": "<按鈕文字，5字以內>",
   "articles": [ { "title": "<標題>", "slug": "<英文slug>", "category": "<分類>", "excerpt": "<80-100字>", "content": "<完整HTML，400字以上>" } ],
   "news": [ { "title": "<消息標題>", "content": "<50-100字>" } ],
-  "marquee": ["<文字1>", "<文字2>", "<文字3>", "<文字4>", "<文字5>"]
+  "marquee": ["<文字1>", "<文字2>", "<文字3>", "<文字4>", "<文字5>"],
+  "pages": [
+    {
+      "slug": "<英文小寫 slug>",
+      "title": "<繁中頁面標題>",
+      "nav_label": "<顯示在 nav 的文字，通常同 title>",
+      "seo": { "title": "<SEO title>", "description": "<SEO description 100-150 字>" },
+      "sections": [ { "type": "<區塊類型>", "config": { /* 依該類型 schema */ } } ]
+    }
+  ],
+  "outOfScopeRequests": []
 }`;
 
 function toSlug(str: string) {
@@ -153,6 +221,7 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
         articles: passedGenerated.articles?.length ?? 0,
         news: passedGenerated.news?.length ?? 0,
         marquee: passedGenerated.marquee?.length ?? 0,
+        pages: passedGenerated.pages?.length ?? 0,
       },
     });
   }
@@ -163,7 +232,7 @@ export async function POST(req: NextRequest, { params }: { params: { siteId: str
   const client = new Anthropic();
   const msg = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 16000,
+    max_tokens: 32000,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: `網站名稱：${site.name}\n\n描述：${prompt}` }],
   });
@@ -285,14 +354,33 @@ async function applyGenerated(site: any, siteId: string, generated: any, prompt:
     );
   }
 
-  // Trigger revalidation
+  // 6. Static pages (dynamic pages system)
+  await service.from('pages').delete().eq('site_id', siteId);
+  if (generated.pages?.length) {
+    await service.from('pages').insert(
+      generated.pages.map((p: any, i: number) => ({
+        site_id: siteId,
+        slug: toSlug(p.slug),
+        title: p.title ?? p.slug,
+        nav_label: p.nav_label ?? p.title ?? null,
+        seo: p.seo ?? {},
+        sections: Array.isArray(p.sections) ? p.sections : [],
+        sort_order: i,
+        is_published: true,
+        show_in_nav: true,
+      }))
+    );
+  }
+
+  // Trigger revalidation (home + fixed feature routes + each new static page)
   const siteUrl = (site.seo_config as any)?.vercel_url;
   if (siteUrl && process.env.REVALIDATION_SECRET) {
+    const pagePaths = (generated.pages ?? []).map((p: any) => `/${toSlug(p.slug)}`);
     try {
       await fetch(`${siteUrl}/api/revalidate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-revalidation-secret': process.env.REVALIDATION_SECRET },
-        body: JSON.stringify({ paths: ['/', '/articles', '/news'] }),
+        body: JSON.stringify({ paths: ['/', '/articles', '/news', ...pagePaths] }),
       });
     } catch { /* non-fatal */ }
   }
