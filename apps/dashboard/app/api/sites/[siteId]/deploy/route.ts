@@ -128,8 +128,8 @@ export async function POST(_req: NextRequest, { params }: { params: { siteId: st
       { status: 500 }
     );
   }
-  const deployment = await deployRes.json();
-  const deployUrl = `https://${deployment.url}`;
+  await deployRes.json();
+  const deployUrl = `https://${projectName}.vercel.app`;
 
   // Persist vercel metadata in seo_config
   await createServiceClient()
