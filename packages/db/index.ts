@@ -5,3 +5,4 @@ export * from './queries/news';
 export * from './queries/media';
 export * from './queries/marquee';
 export * from './queries/contacts';
+export * from './queries/pages';

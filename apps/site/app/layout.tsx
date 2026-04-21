@@ -1,7 +1,15 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import { getSiteConfig } from '@/lib/config';
+import { getPublishedPages, createServerClient } from '@siteforge/db';
 import { Header } from '@/components/modules/Header';
 import './globals.css';
+
+const fetchNavPages = cache(async (siteId: string) => {
+  const supabase = createServerClient();
+  const pages = await getPublishedPages(supabase, siteId);
+  return pages.filter((p) => p.show_in_nav);
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSiteConfig();
@@ -16,12 +24,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const site = await getSiteConfig();
   const mc = site.module_config as any;
   const theme = site.theme_config;
+  const navPages = await fetchNavPages(site.id);
 
   const navLinks = [
     { label: '首頁', href: '/' },
+    ...navPages.map((p) => ({ label: p.nav_label ?? p.title, href: `/${p.slug}` })),
     ...(mc?.articles?.enabled ? [{ label: '文章', href: '/articles' }] : []),
     ...(mc?.news?.enabled ? [{ label: '最新消息', href: '/news' }] : []),
-    ...(mc?.contact?.enabled ? [{ label: '聯絡我們', href: '/contact' }] : []),
   ];
 
   const cssVars = [

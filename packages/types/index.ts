@@ -238,3 +238,73 @@ export interface ThemeTemplate {
   is_public: boolean;
   created_at: string;
 }
+
+// ============================================
+// Dynamic Pages — composable block system
+// ============================================
+
+export interface HeroBlockConfig {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+  backgroundUrl?: string;
+  align?: 'left' | 'center';
+}
+
+export interface TextBlockConfig {
+  eyebrow?: string;
+  heading?: string;
+  body: string;
+  align?: 'left' | 'center';
+  narrow?: boolean;
+}
+
+export interface FeaturesGridItem {
+  title: string;
+  description: string;
+  icon?: string;
+}
+
+export interface FeaturesGridConfig {
+  eyebrow?: string;
+  heading?: string;
+  intro?: string;
+  items: FeaturesGridItem[];
+  columns?: 2 | 3 | 4;
+}
+
+export interface CtaBlockConfig {
+  title: string;
+  description?: string;
+  buttonText: string;
+  buttonUrl: string;
+}
+
+export type Section =
+  | { type: 'hero'; config: HeroBlockConfig }
+  | { type: 'text'; config: TextBlockConfig }
+  | { type: 'features_grid'; config: FeaturesGridConfig }
+  | { type: 'cta'; config: CtaBlockConfig };
+
+export interface PageSeo {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+}
+
+export interface Page {
+  id: string;
+  site_id: string;
+  slug: string;
+  title: string;
+  nav_label: string | null;
+  seo: PageSeo;
+  sections: Section[];
+  sort_order: number;
+  is_published: boolean;
+  show_in_nav: boolean;
+  created_at: string;
+  updated_at: string;
+}

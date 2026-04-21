@@ -154,6 +154,34 @@ CREATE TABLE contact_submissions (
 CREATE INDEX idx_contact_site_id ON contact_submissions(site_id, is_read, created_at DESC);
 
 -- ============================================
+-- 8. PAGES (dynamic static pages composed of sections)
+-- Each site can have unlimited pages; each page is an array of typed blocks.
+-- ============================================
+CREATE TABLE IF NOT EXISTS pages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  site_id UUID NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  nav_label TEXT,
+  seo JSONB NOT NULL DEFAULT '{}'::jsonb,
+  sections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  sort_order INT DEFAULT 0,
+  is_published BOOLEAN DEFAULT TRUE,
+  show_in_nav BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(site_id, slug)
+);
+
+DROP TRIGGER IF EXISTS pages_updated_at ON pages;
+CREATE TRIGGER pages_updated_at
+  BEFORE UPDATE ON pages
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_pages_site_slug ON pages(site_id, slug);
+CREATE INDEX IF NOT EXISTS idx_pages_site_order ON pages(site_id, sort_order);
+
+-- ============================================
 -- RLS Policies
 -- ============================================
 ALTER TABLE sites ENABLE ROW LEVEL SECURITY;
@@ -163,6 +191,7 @@ ALTER TABLE marquee_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE media ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE theme_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Owner full access" ON sites
   FOR ALL USING (auth.uid() = owner_id);
@@ -209,6 +238,17 @@ CREATE POLICY "Public read templates" ON theme_templates
 CREATE POLICY "Public insert contacts" ON contact_submissions
   FOR INSERT WITH CHECK (
     site_id IN (SELECT id FROM sites WHERE status = 'active')
+  );
+
+DROP POLICY IF EXISTS "Owner pages" ON pages;
+CREATE POLICY "Owner pages" ON pages
+  FOR ALL USING (site_id IN (SELECT id FROM sites WHERE owner_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Public read published pages" ON pages;
+CREATE POLICY "Public read published pages" ON pages
+  FOR SELECT USING (
+    is_published = TRUE
+    AND site_id IN (SELECT id FROM sites WHERE status = 'active')
   );
 
 -- ============================================
