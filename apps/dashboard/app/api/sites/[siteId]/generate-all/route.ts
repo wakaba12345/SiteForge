@@ -45,6 +45,22 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師與文案策略
 - articlesLayout: "magazine"（預設）| "grid"（圖片豐富）| "list"（簡潔文字）
 - newsLayout: "list"（專業服務）| "card"（零售/餐飲）
 
+## 版面尺度（依業種氣質選擇，務必跟著這張表走，不要全部都用同一組）
+每個業種都有自己的版面節奏，要有明顯差異：
+
+- 律師 / 法律：**editorial 窄版編輯感** — maxWidth: "1040px", spacing: "2rem", lineHeight: "1.8", baseFontSize: "17px", headingWeight: "600", borderRadius: "4px"
+- 醫療 / 診所：**clean minimal 乾淨留白** — maxWidth: "1120px", spacing: "1.75rem", lineHeight: "1.7", baseFontSize: "16px", headingWeight: "700", borderRadius: "8px"
+- 財務 / 會計 / 顧問：**corporate sober 穩重** — maxWidth: "1120px", spacing: "1.75rem", lineHeight: "1.7", baseFontSize: "16px", headingWeight: "700", borderRadius: "4px"
+- 科技 / 軟體 / 新創：**bold modern 俐落現代** — maxWidth: "1200px", spacing: "1.5rem", lineHeight: "1.6", baseFontSize: "16px", headingWeight: "800", borderRadius: "12px"
+- 設計 / 創意 / 品牌：**editorial bold 雜誌感** — maxWidth: "1080px", spacing: "2rem", lineHeight: "1.7", baseFontSize: "17px", headingWeight: "700", borderRadius: "0px"
+- 餐飲 / 咖啡 / 文化：**warm editorial 溫暖編輯** — maxWidth: "1040px", spacing: "1.75rem", lineHeight: "1.75", baseFontSize: "17px", headingWeight: "600", borderRadius: "6px"
+- 不動產 / 建築：**corporate spacious 企業大氣** — maxWidth: "1200px", spacing: "2rem", lineHeight: "1.7", baseFontSize: "16px", headingWeight: "700", borderRadius: "4px"
+- 教育 / 補習：**friendly readable 親切易讀** — maxWidth: "1120px", spacing: "1.5rem", lineHeight: "1.8", baseFontSize: "17px", headingWeight: "700", borderRadius: "12px"
+- 零售 / 電商 / 美妝：**energetic compact 動感緊湊** — maxWidth: "1280px", spacing: "1.25rem", lineHeight: "1.6", baseFontSize: "16px", headingWeight: "800", borderRadius: "8px"
+- 其他服務：**balanced default 平衡** — maxWidth: "1120px", spacing: "1.5rem", lineHeight: "1.7", baseFontSize: "16px", headingWeight: "700", borderRadius: "8px"
+
+盲選一個落在以上 ±5% 誤差內的組合，不能全部站都長一樣。若描述介於兩者之間，挑比較接近的那一組。
+
 ## 內容規則（每個欄位都要精心設計）
 
 **hero**
@@ -86,8 +102,8 @@ const SYSTEM_PROMPT = `你是一個頂尖的網站視覺設計師與文案策略
   "articlesEnabled": true,
   "theme": {
     "colors": { "primary": "<色碼>", "accent": "<色碼>", "background": "#ffffff", "surface": "<色碼>", "text": "#1a1a1a", "textSecondary": "#64748b", "border": "#e2e8f0" },
-    "typography": { "headingFont": "<字型>", "bodyFont": "Noto Sans TC", "baseFontSize": "16px", "headingWeight": "700", "lineHeight": "1.7" },
-    "layout": { "maxWidth": "1200px", "borderRadius": "<0px|6px|12px>", "spacing": "1.5rem", "headerStyle": "fixed" }
+    "typography": { "headingFont": "<字型>", "bodyFont": "Noto Sans TC", "baseFontSize": "<依業種選 16px|17px>", "headingWeight": "<依業種選 600|700|800>", "lineHeight": "<依業種選 1.6|1.7|1.75|1.8>" },
+    "layout": { "maxWidth": "<依業種選 1040px|1080px|1120px|1200px|1280px>", "borderRadius": "<依業種選 0px|4px|6px|8px|12px>", "spacing": "<依業種選 1.25rem|1.5rem|1.75rem|2rem>", "headerStyle": "fixed" }
   },
   "hero": { "title": "<10字以內>", "subtitle": "<25字左右>", "ctaText": "<5字>", "ctaUrl": "/contact" },
   "featuresTitle": "<差異化區塊標題>",

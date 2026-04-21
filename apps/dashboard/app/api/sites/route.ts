@@ -21,17 +21,24 @@ The JSON must follow this exact structure:
   "typography": {
     "headingFont": "<Google Font name>",
     "bodyFont": "<Google Font name>",
-    "baseFontSize": "16px",
-    "headingWeight": "700",
-    "lineHeight": "1.6"
+    "baseFontSize": "<16px|17px>",
+    "headingWeight": "<600|700|800>",
+    "lineHeight": "<1.6|1.7|1.75|1.8>"
   },
   "layout": {
-    "maxWidth": "1200px",
-    "borderRadius": "<px value>",
-    "spacing": "1.5rem",
+    "maxWidth": "<1040px|1080px|1120px|1200px|1280px>",
+    "borderRadius": "<0px|4px|6px|8px|12px>",
+    "spacing": "<1.25rem|1.5rem|1.75rem|2rem>",
     "headerStyle": "fixed"
   }
-}`;
+}
+
+Design axis guidance:
+- Narrow (1040-1080px) + larger spacing (2rem) + lineHeight 1.75-1.8 + headingWeight 600 → editorial / reading-first (律師, 餐飲, 設計, 文化)
+- Wide (1200-1280px) + tighter spacing (1.25-1.5rem) + lineHeight 1.6 + headingWeight 800 → bold / modern / dense (科技, 零售, 電商)
+- Balanced (1120px) + spacing 1.5-1.75rem + lineHeight 1.7 + headingWeight 700 → corporate / clean / versatile (醫療, 財務, 教育, 其他服務)
+
+Pick ONE direction that matches the described mood — don't default to "balanced" for every request.`;
 
 async function generateThemeInBackground(serviceClient: any, siteId: string, ai_prompt: string) {
   try {

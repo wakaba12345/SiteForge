@@ -22,14 +22,14 @@ Each variant follows this exact structure:
   "typography": {
     "headingFont": "<Google Font name>",
     "bodyFont": "<Google Font name>",
-    "baseFontSize": "16px",
-    "headingWeight": "700",
-    "lineHeight": "1.6"
+    "baseFontSize": "<16px|17px>",
+    "headingWeight": "<600|700|800>",
+    "lineHeight": "<1.6|1.7|1.75|1.8>"
   },
   "layout": {
-    "maxWidth": "1200px",
-    "borderRadius": "<px value>",
-    "spacing": "1.5rem",
+    "maxWidth": "<1040px|1080px|1120px|1200px|1280px>",
+    "borderRadius": "<0px|4px|6px|8px|12px>",
+    "spacing": "<1.25rem|1.5rem|1.75rem|2rem>",
     "headerStyle": "fixed"
   }
 }
@@ -39,8 +39,37 @@ Available Google Fonts: Inter, Noto Sans TC, Noto Sans JP, Plus Jakarta Sans, DM
 Guidelines:
 - Colors must have sufficient contrast (WCAG AA)
 - primary for headers/nav, accent for CTAs/links, background for page, surface for cards
-- borderRadius: "0px" corporate, "8px" modern, "16px" friendly, "9999px" pill
-- Variant 1: close match, Variant 2: bolder/dramatic, Variant 3: minimal/subtle`;
+
+The three variants must differ on DESIGN AXES, not just colors:
+
+**Variant 1 — Editorial / Narrow**（編輯雜誌感）
+- maxWidth: "1040px" or "1080px"
+- spacing: "2rem"
+- lineHeight: "1.75" or "1.8"
+- baseFontSize: "17px"
+- headingWeight: "600"
+- borderRadius: "0px" or "4px"
+- Aesthetic: generous whitespace, reading-first, slightly serif-leaning (consider Noto Serif TC / Lora for heading if appropriate)
+
+**Variant 2 — Bold Modern / Wide**（俐落現代感）
+- maxWidth: "1200px" or "1280px"
+- spacing: "1.5rem" or "1.25rem"
+- lineHeight: "1.6"
+- baseFontSize: "16px"
+- headingWeight: "800"
+- borderRadius: "12px"
+- Aesthetic: punchy, confident, slightly denser, sans-serif bold (Plus Jakarta Sans, Space Grotesk, Outfit)
+
+**Variant 3 — Minimal Clean / Balanced**（極簡平衡感）
+- maxWidth: "1120px"
+- spacing: "1.75rem"
+- lineHeight: "1.7"
+- baseFontSize: "16px"
+- headingWeight: "700"
+- borderRadius: "6px" or "8px"
+- Aesthetic: neutral, versatile, clean (Inter, Manrope, DM Sans)
+
+Colors still match the user's described mood across all 3 variants; the axis of variation is LAYOUT + TYPOGRAPHY SCALE, not color temperature.`;
 
 export async function POST(req: NextRequest) {
   const supabase = createServerClient();
